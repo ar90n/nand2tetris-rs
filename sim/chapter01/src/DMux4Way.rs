@@ -1,0 +1,74 @@
+#[cfg(test)]
+mod tests {
+use super::super::modules::*;
+#[test]
+fn test_DMux4Way(){
+let mut m = DMux4Way::new();
+m.in_ = false;
+m.sel = 0;
+m.prop();
+assert_eq!(m.in_, false);
+assert_eq!(m.sel, 0);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.c, false);
+assert_eq!(m.d, false);
+m.sel = 1;
+m.prop();
+assert_eq!(m.in_, false);
+assert_eq!(m.sel, 1);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.c, false);
+assert_eq!(m.d, false);
+m.sel = 2;
+m.prop();
+assert_eq!(m.in_, false);
+assert_eq!(m.sel, 2);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.c, false);
+assert_eq!(m.d, false);
+m.sel = 3;
+m.prop();
+assert_eq!(m.in_, false);
+assert_eq!(m.sel, 3);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.c, false);
+assert_eq!(m.d, false);
+m.in_ = true;
+m.sel = 0;
+m.prop();
+assert_eq!(m.in_, true);
+assert_eq!(m.sel, 0);
+assert_eq!(m.a, true);
+assert_eq!(m.b, false);
+assert_eq!(m.c, false);
+assert_eq!(m.d, false);
+m.sel = 1;
+m.prop();
+assert_eq!(m.in_, true);
+assert_eq!(m.sel, 1);
+assert_eq!(m.a, false);
+assert_eq!(m.b, true);
+assert_eq!(m.c, false);
+assert_eq!(m.d, false);
+m.sel = 2;
+m.prop();
+assert_eq!(m.in_, true);
+assert_eq!(m.sel, 2);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.c, true);
+assert_eq!(m.d, false);
+m.sel = 3;
+m.prop();
+assert_eq!(m.in_, true);
+assert_eq!(m.sel, 3);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.c, false);
+assert_eq!(m.d, true);
+}
+}
