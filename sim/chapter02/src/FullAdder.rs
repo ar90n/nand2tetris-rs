@@ -1,0 +1,70 @@
+#[cfg(test)]
+mod tests {
+use super::super::modules::*;
+#[test]
+fn test_FullAdder(){
+let mut m = FullAdder::new();
+m.a = false;
+m.b = false;
+m.c = false;
+m.prop();
+assert_eq!(m.carry, false);
+assert_eq!(m.c, false);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.sum, false);
+m.c = true;
+m.prop();
+assert_eq!(m.carry, false);
+assert_eq!(m.c, true);
+assert_eq!(m.a, false);
+assert_eq!(m.b, false);
+assert_eq!(m.sum, true);
+m.b = true;
+m.c = false;
+m.prop();
+assert_eq!(m.carry, false);
+assert_eq!(m.c, false);
+assert_eq!(m.a, false);
+assert_eq!(m.b, true);
+assert_eq!(m.sum, true);
+m.c = true;
+m.prop();
+assert_eq!(m.carry, true);
+assert_eq!(m.c, true);
+assert_eq!(m.a, false);
+assert_eq!(m.b, true);
+assert_eq!(m.sum, false);
+m.a = true;
+m.b = false;
+m.c = false;
+m.prop();
+assert_eq!(m.carry, false);
+assert_eq!(m.c, false);
+assert_eq!(m.a, true);
+assert_eq!(m.b, false);
+assert_eq!(m.sum, true);
+m.c = true;
+m.prop();
+assert_eq!(m.carry, true);
+assert_eq!(m.c, true);
+assert_eq!(m.a, true);
+assert_eq!(m.b, false);
+assert_eq!(m.sum, false);
+m.b = true;
+m.c = false;
+m.prop();
+assert_eq!(m.carry, true);
+assert_eq!(m.c, false);
+assert_eq!(m.a, true);
+assert_eq!(m.b, true);
+assert_eq!(m.sum, false);
+m.c = true;
+m.prop();
+assert_eq!(m.carry, true);
+assert_eq!(m.c, true);
+assert_eq!(m.a, true);
+assert_eq!(m.b, true);
+assert_eq!(m.sum, true);
+}
+}

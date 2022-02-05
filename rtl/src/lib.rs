@@ -14,3 +14,8 @@ pub mod mux4way16;
 pub mod mux8way16;
 pub mod dmux4way;
 pub mod dmux8way;
+pub mod halfadder;
+pub mod fulladder;
+pub mod add16;
+pub mod inc16;
+pub mod alu;
