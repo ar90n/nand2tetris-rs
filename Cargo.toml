@@ -2,5 +2,6 @@
 members = [
     "rtl",
     "sim/chapter01",
+    "sim/chapter02",
     "tool/hdl2kaze"
 ]
