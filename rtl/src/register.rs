@@ -1,7 +1,5 @@
 use kaze::*;
 
-use super::bit::*;
-
 pub struct Register<'a> {
     pub m: &'a Module<'a>,
     pub in_: &'a Input<'a>,
@@ -16,15 +14,29 @@ impl<'a> Register<'a> {
         let in_ = m.input("in_", 16);
         let load = m.input("load", 1);
 
-        let acc = (0..16).map(|i| {
-            let bit = Bit::new(format!("bit{}", i), m);
-            bit.in_.drive(in_.bit(i));
-            bit.load.drive(load);
-            bit.out.bit(0)
-        }).reduce(|acc, out| {
-            out.concat(acc)
-        }).unwrap();
-        let out = m.output("out", acc);
+        let out = if cfg!(feature = "builtin") {
+            use super::mux16::Mux16;
+            let reg = m.reg("reg", 16);
+            let mux = Mux16::new("mux", m);
+            mux.a.drive(reg);
+            mux.b.drive(in_);
+            mux.sel.drive(load);
+            reg.drive_next(mux.out);
+
+            m.output("out", reg)
+        } else {
+            use super::bit::Bit;
+            let acc = (0..16)
+                .map(|i| {
+                    let bit = Bit::new(format!("bit{}", i), m);
+                    bit.in_.drive(in_.bit(i));
+                    bit.load.drive(load);
+                    bit.out.bit(0)
+                })
+                .reduce(|acc, out| out.concat(acc))
+                .unwrap();
+            m.output("out", acc)
+        };
 
         Self { m, in_, load, out }
     }

@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 #kaze = { git = "https://github.com/ar90n/kaze.git", branch = "verilog-generation-support" }
 kaze = { path = "../kaze/kaze" }
+
+[features]
+builtin = []
