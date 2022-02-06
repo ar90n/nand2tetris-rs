@@ -1,4 +1,4 @@
-use anyhow;
+use anyhow::*;
 use clap::Parser;
 use std::collections::HashMap;
 use std::fs::File;
@@ -20,13 +20,13 @@ struct Args {
 
 #[derive(Debug, Clone, Copy)]
 struct Signal {
-    v: u64,
-    w: u64,
+    v: u16,
+    is_bool: bool,
 }
 
 impl fmt::Display for Signal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.w == 1 {
+        if self.is_bool{
             let v = if self.v == 1 { true } else { false };
             write!(f, "{}", v)
         } else {
@@ -40,19 +40,64 @@ struct CmpTable {
     inner: HashMap<String, Vec<Signal>>,
 }
 
-fn parse_signal(s: &str) -> anyhow::Result<Signal> {
+#[derive(Debug, Clone, Copy)]
+enum ParseMode {
+    Bin,
+    Dec,
+}
+
+fn detect_parse_mode(mut column: impl std::iter::Iterator<Item = String>) -> anyhow::Result<ParseMode> {
+    fn count_not_bin_chars(row: &str) -> usize {
+        row.chars().filter(|&c| c != '0' && c != '1').count()
+    }
+
+    let row = column.next().context("column is emply")?;
+    let row = row.trim();
+    let row_width = row.len();
+    let mut has_dec = 0 < count_not_bin_chars(&row);
+    let mut is_same_width = true;
+
+    for line in column {
+        let row = line.trim();
+        if row_width != row.len() {
+            is_same_width = false;
+        }
+        has_dec |= 0 < count_not_bin_chars(&row);
+    }
+
+    let ret = match (has_dec, is_same_width) {
+        (true, _) => ParseMode::Dec,
+        (false, false) => ParseMode::Dec,
+        (false, true) => ParseMode::Bin,
+    };
+    Ok(ret)
+}
+
+fn parse_signal(s: &str, mode: ParseMode) -> anyhow::Result<Signal> {
     let mut s = s.trim();
     if 2 < s.len() && &s[0..2] == "%B" {
         s = &s[2..s.len()]
     }
 
     let w = s.len() as u64;
-    let v = isize::from_str_radix(s, 2)? as u64;
-    Ok(Signal { v, w })
+    let radix = match mode {
+        ParseMode::Bin => 2,
+        ParseMode::Dec => 10,
+    };
+    let v = {
+        let mut tmp = isize::from_str_radix(s, radix)?;
+        if tmp < 0 && radix == 10 {
+            tmp += 65536;
+        } 
+        tmp
+    } as u16;
+    let is_bool = radix == 2 && w == 1;
+    Ok(Signal { v, is_bool })
 }
 
 fn parse_cmp(r: &mut impl Read) -> anyhow::Result<CmpTable> {
     let mut buf_reader = BufReader::new(r);
+    let skip_keys = vec!["time".to_string()];
     let keys = {
         let mut buf = String::new();
         buf_reader.read_line(&mut buf)?;
@@ -61,8 +106,9 @@ fn parse_cmp(r: &mut impl Read) -> anyhow::Result<CmpTable> {
             .map(|s| s.trim().to_string())
             .collect::<Vec<_>>()
     };
-    let mut inner = keys
+    let mut columns = keys
         .iter()
+        .filter(|s| !skip_keys.contains(s))
         .map(|k| (k.clone(), Vec::new()))
         .collect::<HashMap<_, _>>();
 
@@ -70,11 +116,23 @@ fn parse_cmp(r: &mut impl Read) -> anyhow::Result<CmpTable> {
         if let Result::Ok(buf) = l {
             for (i, s) in buf.split("|").filter(|s| !s.trim().is_empty()).enumerate() {
                 let k = &keys[i];
-                let signal = parse_signal(s).expect("invalid signal");
-                inner.get_mut(k).unwrap().push(signal);
+                if !skip_keys.contains(k) {
+                    columns.get_mut(k).unwrap().push(s.to_string());
+                }
             }
         }
     });
+
+    let inner = keys
+        .iter()
+        .filter(|s| !skip_keys.contains(s))
+        .map(|k| {
+            let m = detect_parse_mode(columns[k].iter().cloned()).unwrap();
+            let v = columns[k].iter().map(|s| {
+                parse_signal(s, m).unwrap()}).collect::<Vec<_>>();
+            (k.clone(), v)
+        })
+        .collect::<HashMap<_, _>>();
     let table = CmpTable { inner };
     Ok(table)
 }
@@ -85,6 +143,8 @@ enum Ir {
     Set(String),
     Eval,
     Output,
+    Tick,
+    Tock,
 }
 
 fn parse_tst(r: &mut impl Read) -> anyhow::Result<Vec<Ir>> {
@@ -100,11 +160,11 @@ fn parse_tst(r: &mut impl Read) -> anyhow::Result<Vec<Ir>> {
 
                 match tokens[0] {
                     "load" => Some(Ir::Load(tokens[1].to_string())),
-                    "set" => {
-                        Some(Ir::Set(tokens[1].to_string()))
-                    }
+                    "set" => Some(Ir::Set(tokens[1].to_string())),
                     "eval" => Some(Ir::Eval),
                     "output" => Some(Ir::Output),
+                    "tick" => Some(Ir::Tick),
+                    "tock" => Some(Ir::Tock),
                     _ => None,
                 }
             } else {
@@ -162,6 +222,11 @@ impl CodeGenerator {
                         .push(format!("assert_eq!(m.{}, {});", label, expected));
                 }
                 self.index += 1;
+            }
+            Ir::Tick => self.output.push("m.prop();".to_string()),
+            Ir::Tock => {
+                self.output.push("m.posedge_clk();".to_string());
+                self.output.push("m.prop();".to_string());
             }
         }
         Ok(())
