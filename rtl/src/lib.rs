@@ -1,5 +1,7 @@
-pub mod and;
 pub mod nand;
+pub mod dff;
+
+pub mod and;
 pub mod or;
 pub mod not;
 pub mod xor;
@@ -19,3 +21,8 @@ pub mod fulladder;
 pub mod add16;
 pub mod inc16;
 pub mod alu;
+pub mod bit;
+pub mod register;
+pub mod pc;
+pub mod ram8;
+pub mod ram64;
