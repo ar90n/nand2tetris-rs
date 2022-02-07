@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "rtl",
+    "behavior",
     "sim/chapter01",
     "sim/chapter02",
     "sim/chapter03/a",
