@@ -1,0 +1,15 @@
+[package]
+name = "b"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+kaze = { path = "../../../kaze/kaze" }
+#kaze = { git = "https://github.com/ar90n/kaze.git", branch = "verilog-generation-support" }
+#rtl = { path = "../../../rtl"}
+rtl = { path = "../../../rtl", features = ["builtin"] }
+
+[dependencies]
+rstest = "0.12.0"
