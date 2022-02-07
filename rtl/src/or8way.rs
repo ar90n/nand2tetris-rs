@@ -13,6 +13,9 @@ impl<'a> Or8Way<'a> {
 
         let in_ = m.input("in_", 8);
 
+        let out = if cfg!( feature = "builtin") {
+            m.output("out", !in_.eq(m.lit(0u32, 8u32)))
+        } else {
         let or01 = Or::new("or01", m);
         or01.a.drive(in_.bit(0));
         or01.b.drive(in_.bit(1));
@@ -41,8 +44,8 @@ impl<'a> Or8Way<'a> {
         or01234567.a.drive(or0123.out);
         or01234567.b.drive(or4567.out);
 
-        let out = m.output("out", or01234567.out);
-
+        m.output("out", or01234567.out)
+        };
         Self { m, in_, out }
     }
 }

@@ -15,15 +15,20 @@ impl<'a> Or16<'a> {
         let a = m.input("a", 16);
         let b = m.input("b", 16);
 
-        let acc = (0..16).map(|i| {
-            let or = Or::new(format!("or{}", i), m);
-            or.a.drive(a.bit(i));
-            or.b.drive(b.bit(i));
-            or.out.bit(0)
-        }).reduce(|acc, out| {
-            out.concat(acc)
-        }).unwrap();
-        let out = m.output("out", acc);
+        let out = if cfg!(feature = "builtin") {
+            m.output("out", a | b)
+        } else {
+            let acc = (0..16)
+                .map(|i| {
+                    let or = Or::new(format!("or{}", i), m);
+                    or.a.drive(a.bit(i));
+                    or.b.drive(b.bit(i));
+                    or.out.bit(0)
+                })
+                .reduce(|acc, out| out.concat(acc))
+                .unwrap();
+            m.output("out", acc)
+        };
 
         Self { m, a, b, out }
     }

@@ -1,5 +1,8 @@
 pub mod nand;
 pub mod dff;
+pub mod ram512;
+pub mod ram4k;
+pub mod ram16k;
 
 pub mod and;
 pub mod or;

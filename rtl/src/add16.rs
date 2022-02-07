@@ -16,19 +16,24 @@ impl<'a> Add16<'a> {
         let a = m.input("a", 16);
         let b = m.input("b", 16);
 
-        let acc = (0..16).scan(m.lit(0u32, 1u32), |carry, i| {
-            let fulladder = FullAdder::new(format!("fulladder{}", i), m);
-            fulladder.a.drive(a.bit(i));
-            fulladder.b.drive(b.bit(i));
-            fulladder.c.drive(*carry);
-            *carry = fulladder.carry.bit(0);
-            Some(fulladder.sum.bit(0))
-        }).reduce(|acc, out| {
-            out.concat(acc)
-        }).unwrap();
+        let out = if cfg!(feature = "builtin") {
+            m.output("out", a + b)
+        } else {
+            let acc = (0..16)
+                .scan(m.lit(0u32, 1u32), |carry, i| {
+                    let fulladder = FullAdder::new(format!("fulladder{}", i), m);
+                    fulladder.a.drive(a.bit(i));
+                    fulladder.b.drive(b.bit(i));
+                    fulladder.c.drive(*carry);
+                    *carry = fulladder.carry.bit(0);
+                    Some(fulladder.sum.bit(0))
+                })
+                .reduce(|acc, out| out.concat(acc))
+                .unwrap();
 
-        let out = m.output("out", acc);
+            m.output("out", acc)
+        };
 
-        Self {m, a, b, out}
+        Self { m, a, b, out }
     }
 }

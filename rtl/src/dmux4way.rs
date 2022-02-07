@@ -18,25 +18,35 @@ impl<'a> DMux4Way<'a> {
         let in_ = m.input("in_", 1);
         let sel = m.input("sel", 2);
 
-        let dmux1 = DMux::new("dmux1", m);
-        dmux1.in_.drive(in_);
-        dmux1.sel.drive(sel.bit(1));
+        let (a, b, c, d) = if cfg!(feature = "builtin") {
+            (
+                m.output("a", if_(sel.eq(m.lit(0u32, 2u32)), in_).else_(m.low())),
+                m.output("b", if_(sel.eq(m.lit(1u32, 2u32)), in_).else_(m.low())),
+                m.output("c", if_(sel.eq(m.lit(2u32, 2u32)), in_).else_(m.low())),
+                m.output("d", if_(sel.eq(m.lit(3u32, 2u32)), in_).else_(m.low())),
+            )
+        } else {
+            let dmux1 = DMux::new("dmux1", m);
+            dmux1.in_.drive(in_);
+            dmux1.sel.drive(sel.bit(1));
 
-        let dmux_ab = DMux::new("dmux_ab", m);
-        dmux_ab.in_.drive(dmux1.a);
-        dmux_ab.sel.drive(sel.bit(0));
+            let dmux_ab = DMux::new("dmux_ab", m);
+            dmux_ab.in_.drive(dmux1.a);
+            dmux_ab.sel.drive(sel.bit(0));
 
-        let dmux_cd = DMux::new("dmux_cd", m);
-        dmux_cd.in_.drive(dmux1.b);
-        dmux_cd.sel.drive(sel.bit(0));
+            let dmux_cd = DMux::new("dmux_cd", m);
+            dmux_cd.in_.drive(dmux1.b);
+            dmux_cd.sel.drive(sel.bit(0));
 
+            (
+                m.output("a", dmux_ab.a),
+                m.output("b", dmux_ab.b),
+                m.output("c", dmux_cd.a),
+                m.output("d", dmux_cd.b),
+            )
+        };
 
-        let a = m.output("a", dmux_ab.a);
-        let b = m.output("b", dmux_ab.b);
-        let c = m.output("c", dmux_cd.a);
-        let d = m.output("d", dmux_cd.b);
-
-        Self{
+        Self {
             m,
             in_,
             sel,

@@ -21,23 +21,32 @@ impl<'a> Mux4Way16<'a> {
         let d = m.input("d", 16);
         let sel = m.input("sel", 2);
 
-        let mux16_ab = Mux16::new("mux16_ab", m);
-        mux16_ab.a.drive(a);
-        mux16_ab.b.drive(b);
-        mux16_ab.sel.drive(sel.bit(0));
+        let out = if cfg!(feature = "builtin") {
+            let mux_out = if_(sel.eq(m.lit(0u32, 2u32)), a)
+                .else_if(sel.eq(m.lit(1u32, 2u32)), b)
+                .else_if(sel.eq(m.lit(2u32, 2u32)), c)
+                .else_(d);
+            m.output("out", mux_out)
+        } else {
+            let mux16_ab = Mux16::new("mux16_ab", m);
+            mux16_ab.a.drive(a);
+            mux16_ab.b.drive(b);
+            mux16_ab.sel.drive(sel.bit(0));
 
-        let mux16_cd = Mux16::new("mux16_cd", m);
-        mux16_cd.a.drive(c);
-        mux16_cd.b.drive(d);
-        mux16_cd.sel.drive(sel.bit(0));
+            let mux16_cd = Mux16::new("mux16_cd", m);
+            mux16_cd.a.drive(c);
+            mux16_cd.b.drive(d);
+            mux16_cd.sel.drive(sel.bit(0));
 
-        let mux16_abcd = Mux16::new("mux16_abcd", m);
-        mux16_abcd.a.drive(mux16_ab.out);
-        mux16_abcd.b.drive(mux16_cd.out);
-        mux16_abcd.sel.drive(sel.bit(1));
+            let mux16_abcd = Mux16::new("mux16_abcd", m);
+            mux16_abcd.a.drive(mux16_ab.out);
+            mux16_abcd.b.drive(mux16_cd.out);
+            mux16_abcd.sel.drive(sel.bit(1));
 
-        let out = m.output("out", mux16_abcd.out);
-        Self{
+            m.output("out", mux16_abcd.out)
+        };
+
+        Self {
             m,
             a,
             b,

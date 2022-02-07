@@ -13,14 +13,19 @@ impl<'a> Not16<'a> {
 
         let in_ = m.input("in_", 16);
 
-        let acc = (0..16).map(|i| {
-            let not = Not::new(format!("not{}", i), m);
-            not.in_.drive(in_.bit(i));
-            not.out.bit(0)
-        }).reduce(|acc, out| {
-            out.concat(acc)
-        }).unwrap();
-        let out = m.output("out", acc);
+        let out = if cfg!(feature = "builtin") {
+            m.output("out", !in_)
+        } else {
+            let acc = (0..16)
+                .map(|i| {
+                    let not = Not::new(format!("not{}", i), m);
+                    not.in_.drive(in_.bit(i));
+                    not.out.bit(0)
+                })
+                .reduce(|acc, out| out.concat(acc))
+                .unwrap();
+            m.output("out", acc)
+        };
 
         Self { m, in_, out }
     }

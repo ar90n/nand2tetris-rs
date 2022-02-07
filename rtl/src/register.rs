@@ -15,14 +15,8 @@ impl<'a> Register<'a> {
         let load = m.input("load", 1);
 
         let out = if cfg!(feature = "builtin") {
-            use super::mux16::Mux16;
             let reg = m.reg("reg", 16);
-            let mux = Mux16::new("mux", m);
-            mux.a.drive(reg);
-            mux.b.drive(in_);
-            mux.sel.drive(load);
-            reg.drive_next(mux.out);
-
+            reg.drive_next(if_(load, in_).else_(reg));
             m.output("out", reg)
         } else {
             use super::bit::Bit;
