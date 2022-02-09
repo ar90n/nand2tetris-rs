@@ -19,6 +19,12 @@ struct Args {
 }
 
 #[derive(Debug, Clone, Copy)]
+enum Pattern {
+    Signal(Signal),
+    DontCare,
+}
+
+#[derive(Debug, Clone, Copy)]
 struct Signal {
     v: u16,
     is_bool: bool,
@@ -26,7 +32,7 @@ struct Signal {
 
 impl fmt::Display for Signal {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.is_bool{
+        if self.is_bool {
             let v = if self.v == 1 { true } else { false };
             write!(f, "{}", v)
         } else {
@@ -37,7 +43,7 @@ impl fmt::Display for Signal {
 
 #[derive(Debug)]
 struct CmpTable {
-    inner: HashMap<String, Vec<Signal>>,
+    inner: HashMap<String, Vec<Pattern>>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -46,7 +52,9 @@ enum ParseMode {
     Dec,
 }
 
-fn detect_parse_mode(mut column: impl std::iter::Iterator<Item = String>) -> anyhow::Result<ParseMode> {
+fn detect_parse_mode(
+    mut column: impl std::iter::Iterator<Item = String>,
+) -> anyhow::Result<ParseMode> {
     fn count_not_bin_chars(row: &str) -> usize {
         row.chars().filter(|&c| c != '0' && c != '1').count()
     }
@@ -73,6 +81,16 @@ fn detect_parse_mode(mut column: impl std::iter::Iterator<Item = String>) -> any
     Ok(ret)
 }
 
+fn parse_pattern(s: &str, mode: ParseMode) -> anyhow::Result<Pattern> {
+    let pattern = if s.contains('*') {
+        Pattern::DontCare
+    } else {
+    let signal = parse_signal(s, mode)?;
+        Pattern::Signal(signal)
+    };
+    Ok(pattern)
+}
+
 fn parse_signal(s: &str, mode: ParseMode) -> anyhow::Result<Signal> {
     let mut s = s.trim();
     if 2 < s.len() && &s[0..2] == "%B" {
@@ -88,7 +106,7 @@ fn parse_signal(s: &str, mode: ParseMode) -> anyhow::Result<Signal> {
         let mut tmp = isize::from_str_radix(s, radix)?;
         if tmp < 0 && radix == 10 {
             tmp += 65536;
-        } 
+        }
         tmp
     } as u16;
     let is_bool = radix == 2 && w == 1;
@@ -97,7 +115,7 @@ fn parse_signal(s: &str, mode: ParseMode) -> anyhow::Result<Signal> {
 
 fn parse_cmp(r: &mut impl Read) -> anyhow::Result<CmpTable> {
     let mut buf_reader = BufReader::new(r);
-    let skip_keys = vec!["time".to_string()];
+    let skip_keys = vec!["time".to_string(), "DRegiste".to_string()];
     let keys = {
         let mut buf = String::new();
         buf_reader.read_line(&mut buf)?;
@@ -127,9 +145,12 @@ fn parse_cmp(r: &mut impl Read) -> anyhow::Result<CmpTable> {
         .iter()
         .filter(|s| !skip_keys.contains(s))
         .map(|k| {
+            eprintln!("++++++++++++++++++++++++++++++++");
             let m = detect_parse_mode(columns[k].iter().cloned()).unwrap();
-            let v = columns[k].iter().map(|s| {
-                parse_signal(s, m).unwrap()}).collect::<Vec<_>>();
+            let v = columns[k]
+                .iter()
+                .map(|s| parse_pattern(s, m).unwrap())
+                .collect::<Vec<_>>();
             (k.clone(), v)
         })
         .collect::<HashMap<_, _>>();
@@ -151,24 +172,23 @@ fn parse_tst(r: &mut impl Read) -> anyhow::Result<Vec<Ir>> {
     let instructions = BufReader::new(r)
         .lines()
         .into_iter()
+        .filter_map(|s| s.ok())
+        .flat_map(|s| {
+            s.split(&[',', ';'][..])
+                .map(|s| s.to_owned())
+                .collect::<Vec<_>>()
+        })
         .filter_map(|s| {
-            if let Result::Ok(s) = s {
-                let tokens = s
-                    .trim_end_matches(|c| c == ',' || c == ';')
-                    .split(" ")
-                    .collect::<Vec<_>>();
+            let tokens = s.trim().split(" ").collect::<Vec<_>>();
 
-                match tokens[0] {
-                    "load" => Some(Ir::Load(tokens[1].to_string())),
-                    "set" => Some(Ir::Set(tokens[1].to_string())),
-                    "eval" => Some(Ir::Eval),
-                    "output" => Some(Ir::Output),
-                    "tick" => Some(Ir::Tick),
-                    "tock" => Some(Ir::Tock),
-                    _ => None,
-                }
-            } else {
-                None
+            match tokens[0] {
+                "load" => Some(Ir::Load(tokens[1].to_string())),
+                "set" => Some(Ir::Set(tokens[1].to_string())),
+                "eval" => Some(Ir::Eval),
+                "output" => Some(Ir::Output),
+                "tick" => Some(Ir::Tick),
+                "tock" => Some(Ir::Tock),
+                _ => None,
             }
         })
         .collect::<Vec<_>>();
@@ -178,6 +198,9 @@ fn parse_tst(r: &mut impl Read) -> anyhow::Result<Vec<Ir>> {
 fn escape_label(s: &str) -> String {
     if s == "in" {
         return "in_".to_string();
+    }
+    if s == "addre" {
+        return "addressM".to_string();
     }
 
     return s.to_string();
@@ -210,16 +233,18 @@ impl CodeGenerator {
             }
             Ir::Set(k) => {
                 let label = escape_label(&k);
-                let signal = self.cmp_table.inner.get(&k).unwrap()[self.index];
-                self.output.push(format!("m.{} = {};", label, signal));
+                if let Pattern::Signal(signal) = self.cmp_table.inner.get(&k).unwrap()[self.index] {
+                    self.output.push(format!("m.{} = {};", label, signal));
+                }
             }
             Ir::Eval => self.output.push("m.prop();".to_string()),
             Ir::Output => {
                 for (k, v) in self.cmp_table.inner.iter() {
                     let label = escape_label(&k);
-                    let expected = &v[self.index];
-                    self.output
-                        .push(format!("assert_eq!(m.{}, {});", label, expected));
+                    if let Pattern::Signal(expected) = &v[self.index] {
+                        self.output
+                            .push(format!("assert_eq!(m.{}, {});", label, expected));
+                    }
                 }
                 self.index += 1;
             }

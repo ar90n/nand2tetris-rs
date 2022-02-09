@@ -41,12 +41,12 @@ impl Module for Ram {
 
     fn posedge_clk(&mut self) {
         if self.load {
-            self.buffer[self.address as usize] = self.in_;
+            self.write(self.address, self.in_);
         }
     }
 
     fn prop(&mut self) {
-        self.out = self.buffer[self.address as usize];
+        self.out = self.read(self.address);
     }
 
     fn read(&mut self, address: u32) -> u32 {

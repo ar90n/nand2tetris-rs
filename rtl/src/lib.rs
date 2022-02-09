@@ -29,3 +29,4 @@ pub mod register;
 pub mod pc;
 pub mod ram8;
 pub mod ram64;
+pub mod cpu;
