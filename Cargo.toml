@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "assembler",
     "rtl",
     "behavior",
     "sim/chapter01",
