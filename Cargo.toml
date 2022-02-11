@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "vm",
     "assembler",
     "rtl",
     "behavior",
@@ -8,5 +9,6 @@ members = [
     "sim/chapter03/a",
     "sim/chapter03/b",
     "sim/chapter05",
+    "sim/chapter07",
     "tool/hdl2kaze"
 ]
