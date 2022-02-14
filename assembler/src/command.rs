@@ -29,21 +29,22 @@ impl Dest {
         }
     }
 
-    pub fn parse(s: &str) -> anyhow::Result<(Self, usize)> {
+    pub fn parse(s: &str) -> anyhow::Result<(Self, &str)> {
         let s = s.trim();
         if let Some(end) = s.find('=') {
-            match &s[..end] {
-                "M" => Ok((Dest::M, end)),
-                "D" => Ok((Dest::D, end)),
-                "MD" => Ok((Dest::MD, end)),
-                "A" => Ok((Dest::A, end)),
-                "AM" => Ok((Dest::AM, end)),
-                "AD" => Ok((Dest::AD, end)),
-                "AMD" => Ok((Dest::AMD, end)),
+            let (dest, s) = s.split_at(end);
+            match dest {
+                "M" => Ok((Dest::M, s)),
+                "D" => Ok((Dest::D, s)),
+                "MD" => Ok((Dest::MD, s)),
+                "A" => Ok((Dest::A, s)),
+                "AM" => Ok((Dest::AM, s)),
+                "AD" => Ok((Dest::AD, s)),
+                "AMD" => Ok((Dest::AMD, s)),
                 _ => Err(anyhow::anyhow!("invalid dest: {}", s)),
             }
         } else {
-            Ok((Dest::None, 0))
+            Ok((Dest::None, s))
         }
     }
 
@@ -85,41 +86,42 @@ pub enum Comp {
 }
 
 impl Comp {
-    pub fn parse(s: &str) -> anyhow::Result<(Self, usize)> {
-        let beg = if s.starts_with('=') { 1 } else { 0 };
+    pub fn parse(s: &str) -> anyhow::Result<(Self, &str)> {
+        let s = if s.starts_with('=') { &s[1..] } else { s };
 
         let terminals = vec![';', ' ', '\t', '/'];
         let end = s.find(|c| terminals.contains(&c)).unwrap_or(s.len());
-        match &s[beg..end] {
-            "0" => Ok((Comp::ZERO, end)),
-            "1" => Ok((Comp::ONE, end)),
-            "-1" => Ok((Comp::MINUS_ONE, end)),
-            "D" => Ok((Comp::D, end)),
-            "A" => Ok((Comp::A, end)),
-            "!D" => Ok((Comp::INV_D, end)),
-            "!A" => Ok((Comp::INV_A, end)),
-            "-D" => Ok((Comp::MINUS_D, end)),
-            "-A" => Ok((Comp::MINUS_A, end)),
-            "D+1" => Ok((Comp::D_PLUS_ONE, end)),
-            "A+1" => Ok((Comp::A_PLUS_ONE, end)),
-            "D-1" => Ok((Comp::D_MINUS_ONE, end)),
-            "A-1" => Ok((Comp::A_MINUS_ONE, end)),
-            "D+A" => Ok((Comp::D_PLUS_A, end)),
-            "D-A" => Ok((Comp::D_MINUS_A, end)),
-            "A-D" => Ok((Comp::A_MINUS_D, end)),
-            "D&A" => Ok((Comp::D_AND_A, end)),
-            "D|A" => Ok((Comp::D_OR_A, end)),
-            "M" => Ok((Comp::M, end)),
-            "!M" => Ok((Comp::INV_M, end)),
-            "-M" => Ok((Comp::MINUS_M, end)),
-            "M+1" => Ok((Comp::M_PLUS_ONE, end)),
-            "M-1" => Ok((Comp::M_MINUS_ONE, end)),
-            "D+M" => Ok((Comp::D_PLUS_M, end)),
-            "D-M" => Ok((Comp::D_MINUS_M, end)),
-            "M-D" => Ok((Comp::M_MINUS_D, end)),
-            "D&M" => Ok((Comp::D_AND_M, end)),
-            "D|M" => Ok((Comp::D_OR_M, end)),
-            _ => Err(anyhow::anyhow!("invalid comp: {}", s)),
+        let (comp, s) = s.split_at(end);
+        match comp {
+            "0" => Ok((Comp::ZERO, s)),
+            "1" => Ok((Comp::ONE, s)),
+            "-1" => Ok((Comp::MINUS_ONE, s)),
+            "D" => Ok((Comp::D, s)),
+            "A" => Ok((Comp::A, s)),
+            "!D" => Ok((Comp::INV_D, s)),
+            "!A" => Ok((Comp::INV_A, s)),
+            "-D" => Ok((Comp::MINUS_D, s)),
+            "-A" => Ok((Comp::MINUS_A, s)),
+            "D+1" => Ok((Comp::D_PLUS_ONE, s)),
+            "A+1" => Ok((Comp::A_PLUS_ONE, s)),
+            "D-1" => Ok((Comp::D_MINUS_ONE, s)),
+            "A-1" => Ok((Comp::A_MINUS_ONE, s)),
+            "D+A" => Ok((Comp::D_PLUS_A, s)),
+            "D-A" => Ok((Comp::D_MINUS_A, s)),
+            "A-D" => Ok((Comp::A_MINUS_D, s)),
+            "D&A" => Ok((Comp::D_AND_A, s)),
+            "D|A" => Ok((Comp::D_OR_A, s)),
+            "M" => Ok((Comp::M, s)),
+            "!M" => Ok((Comp::INV_M, s)),
+            "-M" => Ok((Comp::MINUS_M, s)),
+            "M+1" => Ok((Comp::M_PLUS_ONE, s)),
+            "M-1" => Ok((Comp::M_MINUS_ONE, s)),
+            "D+M" => Ok((Comp::D_PLUS_M, s)),
+            "D-M" => Ok((Comp::D_MINUS_M, s)),
+            "M-D" => Ok((Comp::M_MINUS_D, s)),
+            "D&M" => Ok((Comp::D_AND_M, s)),
+            "D|M" => Ok((Comp::D_OR_M, s)),
+            _ => Err(anyhow::anyhow!("invalid comp: {}", comp)),
         }
     }
 
@@ -184,25 +186,23 @@ impl Jump {
         }
     }
 
-    pub fn parse(s: &str) -> anyhow::Result<(Self, usize)> {
+    pub fn parse(s: &str) -> anyhow::Result<(Self, &str)> {
         let s = s.trim();
-        let beg = if s.starts_with(';') { 1 } else { 0 };
+        let s = if s.starts_with(';') { &s[1..] } else { s };
         let terminals = vec![' ', '\t', '/'];
         let end = s.find(|c| terminals.contains(&c)).unwrap_or(s.len());
 
-        if beg == end{
-            return Ok((Jump::None, 0));
-        }
-
-        match &s[beg..end] {
-            "JGT" => Ok((Jump::JGT, end)),
-            "JEQ" => Ok((Jump::JEQ, end)),
-            "JGE" => Ok((Jump::JGE, end)),
-            "JLT" => Ok((Jump::JLT, end)),
-            "JNE" => Ok((Jump::JNE, end)),
-            "JLE" => Ok((Jump::JLE, end)),
-            "JMP" => Ok((Jump::JMP, end)),
-            _ => anyhow::bail!("Invalid jump instruction: {}", s),
+        let (jump, s) = s.split_at(end);
+        match jump {
+            "" => Ok((Jump::None, s)),
+            "JGT" => Ok((Jump::JGT, s)),
+            "JEQ" => Ok((Jump::JEQ, s)),
+            "JGE" => Ok((Jump::JGE, s)),
+            "JLT" => Ok((Jump::JLT, s)),
+            "JNE" => Ok((Jump::JNE, s)),
+            "JLE" => Ok((Jump::JLE, s)),
+            "JMP" => Ok((Jump::JMP, s)),
+            _ => anyhow::bail!("Invalid jump instruction: {}", jump),
         }
     }
 
@@ -221,7 +221,7 @@ pub enum Command {
 
 impl Command {
     pub fn parse_a_command(s: &str) -> anyhow::Result<Self> {
-        let mut s = s.trim();
+        let s = s.trim();
         if s.is_empty() || !s.starts_with("@") {
             anyhow::bail!("Invalid A command: {}", s);
         }
@@ -234,17 +234,14 @@ impl Command {
     }
 
     pub fn parse_c_command(s: &str) -> anyhow::Result<Self> {
-        let mut s = s.trim();
+        let s = s.trim();
         if s.is_empty() {
             anyhow::bail!("Invalid C command: {}", s);
         }
 
-        Dest::parse(s).and_then(|(dest, origin)| {
-            s = &s[origin..];
-            Comp::parse(s).and_then(|(comp, origin)| {
-                s = &s[origin..];
-                Jump::parse(s).map(|(jump, _)| Command::C(dest, comp, jump))
-            })
+        Dest::parse(s).and_then(|(dest, s)| {
+            Comp::parse(s)
+                .and_then(|(comp, s)| Jump::parse(s).map(|(jump, _)| Command::C(dest, comp, jump)))
         })
     }
 
@@ -272,19 +269,23 @@ mod tests {
     fn test_parse_jump() {
         let (jump, count) = Jump::parse("JGT").unwrap();
         assert_eq!(jump, Jump::JGT);
-        assert_eq!(count, 3);
+        assert_eq!(count, "");
 
         let (jump, count) = Jump::parse("JMP  ").unwrap();
         assert_eq!(jump, Jump::JMP);
-        assert_eq!(count, 3);
+        assert_eq!(count, "");
 
         let (jump, count) = Jump::parse(";JMP").unwrap();
         assert_eq!(jump, Jump::JMP);
-        assert_eq!(count, 4);
+        assert_eq!(count, "");
+
+        let (jump, count) = Jump::parse("JMP //foo").unwrap();
+        assert_eq!(jump, Jump::JMP);
+        assert_eq!(count, " //foo");
 
         let (jump, count) = Jump::parse("").unwrap();
         assert_eq!(jump, Jump::None);
-        assert_eq!(count, 0);
+        assert_eq!(count, "");
 
         let err = Jump::parse("JM");
         assert!(err.is_err());
@@ -294,38 +295,38 @@ mod tests {
     fn test_parse_dest() {
         let (dest, count) = Dest::parse("M=1").unwrap();
         assert_eq!(dest, Dest::M);
-        assert_eq!(count, 1);
+        assert_eq!(count, "=1");
 
         let (dest, count) = Dest::parse("1").unwrap();
         assert_eq!(dest, Dest::None);
-        assert_eq!(count, 0);
+        assert_eq!(count, "1");
 
         let (dest, count) = Dest::parse("AMD=2").unwrap();
         assert_eq!(dest, Dest::AMD);
-        assert_eq!(count, 3);
+        assert_eq!(count, "=2");
     }
 
     #[test]
     fn test_parse_comp() {
         let (comp, count) = Comp::parse("0").unwrap();
         assert_eq!(comp, Comp::ZERO);
-        assert_eq!(count, 1);
+        assert_eq!(count, "");
 
         let (comp, count) = Comp::parse("M+1").unwrap();
         assert_eq!(comp, Comp::M_PLUS_ONE);
-        assert_eq!(count, 3);
+        assert_eq!(count, "");
 
         let (comp, count) = Comp::parse("D|M ").unwrap();
         assert_eq!(comp, Comp::D_OR_M);
-        assert_eq!(count, 3);
+        assert_eq!(count, " ");
 
         let (comp, count) = Comp::parse("D&M//foo").unwrap();
         assert_eq!(comp, Comp::D_AND_M);
-        assert_eq!(count, 3);
+        assert_eq!(count, "//foo");
 
         let (comp, count) = Comp::parse("-1;").unwrap();
         assert_eq!(comp, Comp::MINUS_ONE);
-        assert_eq!(count, 2);
+        assert_eq!(count, ";");
     }
 
     #[test]
