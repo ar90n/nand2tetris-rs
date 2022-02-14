@@ -249,7 +249,7 @@ impl Command {
     }
 
     pub fn parse_l_command(s: &str) -> anyhow::Result<Self> {
-        let mut s = s.trim();
+        let s = s.trim();
         if s.is_empty() || !s.starts_with("(") || !s.ends_with(")") {
             anyhow::bail!("Invalid L command: {}", s);
         }
