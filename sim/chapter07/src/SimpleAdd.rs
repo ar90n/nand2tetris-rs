@@ -11,6 +11,13 @@ mod tests {
             "push constant 8".to_string(),
             "add".to_string(),
         ];
+        let vm_program = r#"push constant 7
+push constant 8
+add
+"#
+        .split("\n")
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>();
         let program = parse(&vm_program)
             .and_then(|p| translate(&p))
             .and_then(|p| assemble(&p))
