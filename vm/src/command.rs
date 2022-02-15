@@ -29,7 +29,7 @@ impl Segment {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
     Push(Segment, u16),
     Pop(Segment, u16),
@@ -42,6 +42,12 @@ pub enum Command {
     And,
     Or,
     Not,
+    Function(String, u16),
+    Call(String, u16),
+    Return,
+    Label(String),
+    Goto(String),
+    IfGoto(String),
 }
 
 impl Command {
@@ -49,15 +55,39 @@ impl Command {
         let (segment, s) = Segment::parse(s)?;
 
         let s = s.trim();
-        let end = s.find(' ').unwrap_or(s.len());
+        let end = s.find(|c| c == ' ' || c == '\t').unwrap_or(s.len());
         let (index, _) = s.split_at(end);
         let index = index.parse::<u16>()?;
         Ok((segment, index))
     }
 
+    fn parse_label(s: &str) -> anyhow::Result<(String, &str)> {
+        let s = s.trim();
+        let end = s
+            .find(|c| c == ' ' || c == '\t')
+            .unwrap_or(s.len());
+        let (label, s) = s.split_at(end);
+        Ok((label.to_string(), s))
+    }
+
+    fn parse_function_args(s: &str) -> anyhow::Result<(String, u16)> {
+        let s = s.trim();
+        let end = s
+            .find(|c| c == ' ' || c == '\t')
+            .ok_or(anyhow::anyhow!("No space found in {} 1", s))?;
+        let (name, s) = s.split_at(end);
+        let s = s.trim();
+        let end = s
+            .find(|c| c == ' ' || c == '\t')
+            .unwrap_or(s.len());
+        let (arg_count, _) = s.split_at(end);
+        let arg_count = arg_count.parse::<u16>()?;
+        Ok((name.to_string(), arg_count))
+    }
+
     pub fn parse(s: &str) -> anyhow::Result<Self> {
         let s = s.trim();
-        let end = s.find(' ').unwrap_or(s.len());
+        let end = s.find(|c| c == ' ' || c == '\t').unwrap_or(s.len());
         let (command, s) = s.split_at(end);
         match command {
             "push" => {
@@ -77,6 +107,27 @@ impl Command {
             "and" => Ok(Command::And),
             "or" => Ok(Command::Or),
             "not" => Ok(Command::Not),
+            "function" => {
+                let (name, arg_count) = Command::parse_function_args(s)?;
+                Ok(Command::Function(name, arg_count))
+            }
+            "call" => {
+                let (name, arg_count) = Command::parse_function_args(s)?;
+                Ok(Command::Call(name, arg_count))
+            }
+            "return" => Ok(Command::Return),
+            "label" => {
+                let (s, _) = Command::parse_label(s)?;
+                Ok(Command::Label(s))
+            }
+            "goto" => {
+                let (s, _) = Command::parse_label(s)?;
+                Ok(Command::Goto(s))
+            }
+            "if-goto" => {
+                let (s, _) = Command::parse_label(s)?;
+                Ok(Command::IfGoto(s))
+            }
             _ => Err(anyhow::anyhow!("Unknown command: {}", command)),
         }
     }

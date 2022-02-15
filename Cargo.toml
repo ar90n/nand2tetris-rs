@@ -10,5 +10,6 @@ members = [
     "sim/chapter03/b",
     "sim/chapter05",
     "sim/chapter07",
+    "sim/chapter08",
     "tool/hdl2kaze"
 ]
