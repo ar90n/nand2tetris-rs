@@ -2,6 +2,7 @@
 members = [
     "vm",
     "assembler",
+    "compiler",
     "rtl",
     "behavior",
     "sim/chapter01",
