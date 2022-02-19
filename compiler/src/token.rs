@@ -87,7 +87,9 @@ impl Token {
     }
 
     fn parse_keyword(s: &str) -> Result<(Self, &str)> {
-        let end = s.find(is_delimiter).unwrap_or(s.len());
+        let end = s
+            .find(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+            .unwrap_or(s.len());
         let (s, rem) = s.split_at(end);
         match s {
             "class" => Ok((Self::Class, rem)),
@@ -163,8 +165,9 @@ impl Token {
             .or_else(|_| Self::parse_identifier(s))
     }
 
-    pub fn dump_as_xml(&self) -> String {
-        match self {
+    pub fn dump_as_xml(&self, level: usize) -> String {
+        let mut ret = "  ".repeat(level);
+        ret += &match self {
             Self::LParen => "<symbol> ( </symbol>".to_string(),
             Self::RParen => "<symbol> ) </symbol>".to_string(),
             Self::LBrace => "<symbol> { </symbol>".to_string(),
@@ -209,7 +212,8 @@ impl Token {
             Self::StringConstant(s) => format!("<stringConstant> {} </stringConstant>", s),
             Self::IntegerConstant(n) => format!("<integerConstant> {} </integerConstant>", n),
             Self::EOF => String::default(),
-        }
+        };
+        ret
     }
 }
 
@@ -236,10 +240,8 @@ mod tests {
             Token::parse("function abc").unwrap(),
             (Token::Function, " abc")
         );
-        assert_eq!(
-            Token::parse("return;").unwrap(),
-            (Token::Return, ";")
-        );
+        assert_eq!(Token::parse("return;").unwrap(), (Token::Return, ";"));
+        assert_eq!(Token::parse("this)").unwrap(), (Token::This, ")"));
     }
 
     #[test]

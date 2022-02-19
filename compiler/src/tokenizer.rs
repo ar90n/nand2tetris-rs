@@ -44,7 +44,7 @@ pub fn tokenize(s: &str) -> Result<Vec<Token>> {
 pub fn dump_as_xml(tokens: &[Token]) -> String {
     let mut tags = vec!["<tokens>".to_string()];
     for token in tokens {
-        tags.push(token.dump_as_xml());
+        tags.push(token.dump_as_xml(0));
     }
     tags.push("</tokens>".to_string());
     tags.join("\n")

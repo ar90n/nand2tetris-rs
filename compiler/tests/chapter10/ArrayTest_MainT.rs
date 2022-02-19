@@ -1,7 +1,7 @@
 use compiler::tokenizer::{tokenize, dump_as_xml};
 
 #[test]
-fn test_main() {
+fn test_arraytest_maint() {
 	let jack_code = r#"// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
