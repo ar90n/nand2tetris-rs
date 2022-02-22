@@ -5,6 +5,6 @@ use super::token::Token;
 use anyhow::*;
 
 pub fn parse(tokens: &[Token]) -> Result<Box<Class>> {
-    let (c, rem) = Class::parse(tokens)?;
+    let (c, _) = Class::parse(tokens)?;
     Ok(c)
 }

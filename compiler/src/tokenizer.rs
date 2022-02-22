@@ -2,6 +2,7 @@ use anyhow::*;
 use core::result::Result::Ok;
 
 use super::token::Token;
+use super::foundation::*;
 
 fn skip_comments(s: &str) -> Result<&str> {
     let s = s.trim_start();

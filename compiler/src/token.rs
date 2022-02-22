@@ -1,16 +1,5 @@
 use anyhow::*;
 
-fn trim_start(s: &str) -> &str {
-    let beg = s
-        .find(|c: char| !c.is_whitespace() && c != '\n')
-        .unwrap_or(s.len());
-    &s[beg..]
-}
-
-fn is_delimiter(c: char) -> bool {
-    c.is_whitespace() || c.is_control() || c == ';'
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
     LParen,
@@ -163,57 +152,6 @@ impl Token {
             .or_else(|_| Self::parse_integer_constant(s))
             .or_else(|_| Self::parse_string_constant(s))
             .or_else(|_| Self::parse_identifier(s))
-    }
-
-    pub fn dump_as_xml(&self, level: usize) -> String {
-        let mut ret = "  ".repeat(level);
-        ret += &match self {
-            Self::LParen => "<symbol> ( </symbol>".to_string(),
-            Self::RParen => "<symbol> ) </symbol>".to_string(),
-            Self::LBrace => "<symbol> { </symbol>".to_string(),
-            Self::RBrace => "<symbol> } </symbol>".to_string(),
-            Self::LBracket => "<symbol> [ </symbol>".to_string(),
-            Self::RBracket => "<symbol> ] </symbol>".to_string(),
-            Self::Period => "<symbol> . </symbol>".to_string(),
-            Self::Comma => "<symbol> , </symbol>".to_string(),
-            Self::Semicolon => "<symbol> ; </symbol>".to_string(),
-            Self::Plus => "<symbol> + </symbol>".to_string(),
-            Self::Minus => "<symbol> - </symbol>".to_string(),
-            Self::Asterisk => "<symbol> * </symbol>".to_string(),
-            Self::Slash => "<symbol> / </symbol>".to_string(),
-            Self::And => "<symbol> &amp; </symbol>".to_string(),
-            Self::Or => "<symbol> | </symbol>".to_string(),
-            Self::Lt => "<symbol> &lt; </symbol>".to_string(),
-            Self::Gt => "<symbol> &gt; </symbol>".to_string(),
-            Self::Eq => "<symbol> = </symbol>".to_string(),
-            Self::Tilde => "<symbol> ~ </symbol>".to_string(),
-            Self::Class => "<keyword> class </keyword>".to_string(),
-            Self::Constructor => "<keyword> constructor </keyword>".to_string(),
-            Self::Function => "<keyword> function </keyword>".to_string(),
-            Self::Method => "<keyword> method </keyword>".to_string(),
-            Self::Field => "<keyword> field </keyword>".to_string(),
-            Self::Static => "<keyword> static </keyword>".to_string(),
-            Self::Var => "<keyword> var </keyword>".to_string(),
-            Self::Int => "<keyword> int </keyword>".to_string(),
-            Self::Char => "<keyword> char </keyword>".to_string(),
-            Self::Boolean => "<keyword> boolean </keyword>".to_string(),
-            Self::Void => "<keyword> void </keyword>".to_string(),
-            Self::True => "<keyword> true </keyword>".to_string(),
-            Self::False => "<keyword> false </keyword>".to_string(),
-            Self::Null => "<keyword> null </keyword>".to_string(),
-            Self::This => "<keyword> this </keyword>".to_string(),
-            Self::Let => "<keyword> let </keyword>".to_string(),
-            Self::Do => "<keyword> do </keyword>".to_string(),
-            Self::If => "<keyword> if </keyword>".to_string(),
-            Self::Else => "<keyword> else </keyword>".to_string(),
-            Self::While => "<keyword> while </keyword>".to_string(),
-            Self::Return => "<keyword> return </keyword>".to_string(),
-            Self::Identifier(s) => format!("<identifier> {} </identifier>", s),
-            Self::StringConstant(s) => format!("<stringConstant> {} </stringConstant>", s),
-            Self::IntegerConstant(n) => format!("<integerConstant> {} </integerConstant>", n),
-            Self::EOF => String::default(),
-        };
-        ret
     }
 }
 

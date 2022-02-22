@@ -1,7 +1,6 @@
 use anyhow::*;
 
 use super::foundation::*;
-use super::parsable::*;
 use super::token::Token;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

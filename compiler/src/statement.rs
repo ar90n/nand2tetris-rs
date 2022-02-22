@@ -2,16 +2,15 @@ use anyhow::*;
 
 use super::expression::*;
 use super::foundation::*;
-use super::parsable::*;
 use super::token::Token;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ReturnStatement(Box<Option<Box<Expression>>>);
+pub struct ReturnStatement(Box<Optional<Expression>>);
 
 impl Parsable for ReturnStatement {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (_, rem) = token_parser(Token::Return)(tokens)?;
-        let (e, rem) = option_parser(Expression::parse)(rem)?;
+        let (e, rem) = Optional::<Expression>::parse(rem)?;
         let (_, rem) = token_parser(Token::Semicolon)(rem)?;
         Ok((Box::new(Self(e)), rem))
     }
@@ -20,14 +19,17 @@ impl Parsable for ReturnStatement {
 impl DumpXml for ReturnStatement {
     fn dump_as_xml(&self, level: usize) -> String {
         let (open_tag, close_tag) = self.tag("returnStatement", level);
-        let mut tags = vec![open_tag, Token::Return.dump_as_xml(level + 1)];
-
-        if let Some(ref v) = *self.0 {
-            tags.push(v.dump_as_xml(level + 1));
-        }
-        tags.push(Token::Semicolon.dump_as_xml(level + 1));
-        tags.push(close_tag);
-        tags.join("\n")
+        [
+            open_tag,
+            Token::Return.dump_as_xml(level + 1),
+            self.0.dump_as_xml(level + 1),
+            Token::Semicolon.dump_as_xml(level + 1),
+            close_tag,
+        ]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
     }
 }
 
@@ -260,12 +262,12 @@ impl DumpXml for Statement {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Statements {
-    pub statements: Box<Vec<Box<Statement>>>,
+    pub statements: Box<Collection<Statement>>,
 }
 
 impl Parsable for Statements {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
-        let (statements, rem) = repeat_parser(Statement::parse)(tokens)?;
+        let (statements, rem) = Collection::<Statement>::parse(tokens)?;
         Ok((Box::new(Self { statements }), rem))
     }
 }
@@ -273,14 +275,11 @@ impl Parsable for Statements {
 impl DumpXml for Statements {
     fn dump_as_xml(&self, level: usize) -> String {
         let (open_tag, close_tag) = self.tag("statements", level);
-        let mut tags = vec![open_tag];
-
-        self.statements.iter().for_each(|s| {
-            tags.push(s.dump_as_xml(level + 1));
-        });
-
-        tags.push(close_tag);
-        tags.join("\n")
+        [open_tag, self.statements.dump_as_xml(level + 1), close_tag]
+            .into_iter()
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
 

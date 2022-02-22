@@ -151,10 +151,10 @@ class Main {
 
 	let tokens = tokenize(jack_code).unwrap();
 	let class = parse(&tokens).unwrap();
-	assert_eq!(tags, class.dump_as_xml(0));
+	//assert_eq!(tags, class.dump_as_xml(0));
 
-  //let xml = class.dump_as_xml(0);
-  //for (i, line) in xml.lines().enumerate() {
-  //  assert_eq!(tags.lines().nth(i).unwrap(), line);
-  //}
+  let xml = class.dump_as_xml(0);
+  for (i, line) in xml.lines().enumerate() {
+    assert_eq!(tags.lines().nth(i).unwrap(), line);
+  }
 }

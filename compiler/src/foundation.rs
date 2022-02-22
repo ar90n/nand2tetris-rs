@@ -1,10 +1,5 @@
 use anyhow::*;
 
-use crate::{
-    parsable::repeat_parser,
-    program::{Class, ParameterList},
-};
-
 use super::token::Token;
 
 pub trait Parsable {
@@ -21,6 +16,59 @@ pub trait DumpXml {
         let open_tag = format!("{}<{}>", indent, name);
         let close_tag = format!("{}</{}>", indent, name);
         (open_tag, close_tag)
+    }
+}
+
+impl DumpXml for Token {
+    fn dump_as_xml(&self, level: usize) -> String {
+        let mut ret = self.indent(level);
+        ret += &match self {
+            Self::LParen => "<symbol> ( </symbol>".to_string(),
+            Self::RParen => "<symbol> ) </symbol>".to_string(),
+            Self::LBrace => "<symbol> { </symbol>".to_string(),
+            Self::RBrace => "<symbol> } </symbol>".to_string(),
+            Self::LBracket => "<symbol> [ </symbol>".to_string(),
+            Self::RBracket => "<symbol> ] </symbol>".to_string(),
+            Self::Period => "<symbol> . </symbol>".to_string(),
+            Self::Comma => "<symbol> , </symbol>".to_string(),
+            Self::Semicolon => "<symbol> ; </symbol>".to_string(),
+            Self::Plus => "<symbol> + </symbol>".to_string(),
+            Self::Minus => "<symbol> - </symbol>".to_string(),
+            Self::Asterisk => "<symbol> * </symbol>".to_string(),
+            Self::Slash => "<symbol> / </symbol>".to_string(),
+            Self::And => "<symbol> &amp; </symbol>".to_string(),
+            Self::Or => "<symbol> | </symbol>".to_string(),
+            Self::Lt => "<symbol> &lt; </symbol>".to_string(),
+            Self::Gt => "<symbol> &gt; </symbol>".to_string(),
+            Self::Eq => "<symbol> = </symbol>".to_string(),
+            Self::Tilde => "<symbol> ~ </symbol>".to_string(),
+            Self::Class => "<keyword> class </keyword>".to_string(),
+            Self::Constructor => "<keyword> constructor </keyword>".to_string(),
+            Self::Function => "<keyword> function </keyword>".to_string(),
+            Self::Method => "<keyword> method </keyword>".to_string(),
+            Self::Field => "<keyword> field </keyword>".to_string(),
+            Self::Static => "<keyword> static </keyword>".to_string(),
+            Self::Var => "<keyword> var </keyword>".to_string(),
+            Self::Int => "<keyword> int </keyword>".to_string(),
+            Self::Char => "<keyword> char </keyword>".to_string(),
+            Self::Boolean => "<keyword> boolean </keyword>".to_string(),
+            Self::Void => "<keyword> void </keyword>".to_string(),
+            Self::True => "<keyword> true </keyword>".to_string(),
+            Self::False => "<keyword> false </keyword>".to_string(),
+            Self::Null => "<keyword> null </keyword>".to_string(),
+            Self::This => "<keyword> this </keyword>".to_string(),
+            Self::Let => "<keyword> let </keyword>".to_string(),
+            Self::Do => "<keyword> do </keyword>".to_string(),
+            Self::If => "<keyword> if </keyword>".to_string(),
+            Self::Else => "<keyword> else </keyword>".to_string(),
+            Self::While => "<keyword> while </keyword>".to_string(),
+            Self::Return => "<keyword> return </keyword>".to_string(),
+            Self::Identifier(s) => format!("<identifier> {} </identifier>", s),
+            Self::StringConstant(s) => format!("<stringConstant> {} </stringConstant>", s),
+            Self::IntegerConstant(n) => format!("<integerConstant> {} </integerConstant>", n),
+            Self::EOF => String::default(),
+        };
+        ret
     }
 }
 
@@ -50,7 +98,7 @@ impl Parsable for Empty {
 }
 
 impl DumpXml for Empty {
-    fn dump_as_xml(&self, level: usize) -> String {
+    fn dump_as_xml(&self, _: usize) -> String {
         String::default()
     }
 }
@@ -508,10 +556,108 @@ impl<T: Parsable + DumpXml, U: Parsable + DumpXml> DumpXml for (Box<T>, Box<U>) 
     }
 }
 
-pub type Seq2<T: Parsable, U: Parsable> = (Box<T>, Box<U>);
-pub type Seq3<T: Parsable, U: Parsable, V: Parsable> = (Box<T>, Box<U>, Box<V>);
-pub type Seq4<T: Parsable, U: Parsable, V: Parsable, W: Parsable> =
-    (Box<T>, Box<U>, Box<V>, Box<W>);
+pub type Seq2<T, U> = (Box<T>, Box<U>);
+pub type Seq3<T, U, V> = (Box<T>, Box<U>, Box<V>);
+pub type Seq4<T, U, V, W> = (Box<T>, Box<U>, Box<V>, Box<W>);
+
+pub(crate) fn token_parser(
+    target: Token,
+) -> impl Fn(&[Token]) -> Result<(Box<PlaceHolder>, &[Token])> {
+    move |tokens: &[Token]| {
+        if tokens.is_empty() {
+            return Err(anyhow!("tokens are empty"));
+        }
+
+        let (token, rem) = tokens.split_at(1);
+        if token[0] == target {
+            Ok((
+                Box::new(PlaceHolder {
+                    token: target.clone(),
+                }),
+                rem,
+            ))
+        } else {
+            Err(anyhow!("invalid token: {:?}", token))
+        }
+    }
+}
+
+pub(crate) fn option_parser<T>(
+    parser: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+) -> impl Fn(&[Token]) -> Result<(Box<Option<Box<T>>>, &[Token])> {
+    move |tokens: &[Token]| {
+        if let anyhow::Result::Ok((t, tokens)) = parser(tokens) {
+            Ok((Box::new(Some(t)), tokens))
+        } else {
+            Ok((Box::new(None), tokens))
+        }
+    }
+}
+
+pub(crate) fn repeat_parser<T>(
+    parser: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+) -> impl Fn(&[Token]) -> Result<(Box<Vec<Box<T>>>, &[Token])> {
+    move |tokens: &[Token]| {
+        let mut result = vec![];
+        let mut tokens = tokens;
+        while let anyhow::Result::Ok((item, rem)) = parser(tokens) {
+            result.push(item);
+            tokens = rem;
+        }
+        Ok((Box::new(result), tokens))
+    }
+}
+
+//pub(crate) fn repeat_parser2<T>(
+//    parser: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+//) -> impl Fn(&[Token]) -> Result<(Box<Collection<T>>, &[Token])> {
+//    move |tokens: &[Token]| {
+//        let mut result = vec![];
+//        let mut tokens = tokens;
+//        while let anyhow::Result::Ok((item, rem)) = parser(tokens) {
+//            result.push(item);
+//            tokens = rem;
+//        }
+//        Ok((Box::new(result), tokens))
+//    }
+//}
+
+pub(crate) fn seq2_parser<T, U>(
+    parser_t: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+    parser_u: impl Fn(&[Token]) -> Result<(Box<U>, &[Token])>,
+) -> impl Fn(&[Token]) -> Result<(Box<(Box<T>, Box<U>)>, &[Token])> {
+    move |tokens: &[Token]| {
+        let (t, tokens) = parser_t(tokens)?;
+        let (u, tokens) = parser_u(tokens)?;
+        Ok((Box::new((t, u)), tokens))
+    }
+}
+
+pub(crate) fn drop1_parser<T, U>(
+    parser_t: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+    parser_u: impl Fn(&[Token]) -> Result<(Box<U>, &[Token])>,
+) -> impl Fn(&[Token]) -> Result<(Box<U>, &[Token])> {
+    move |tokens: &[Token]| {
+        let (_, tokens) = parser_t(tokens)?;
+        let (u, tokens) = parser_u(tokens)?;
+        Ok((u, tokens))
+    }
+}
+
+pub(crate) fn surround_parser<T>(
+    parser: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+    surround_left: Token,
+    surround_right: Token,
+) -> impl Fn(&[Token]) -> Result<(Box<T>, &[Token])> {
+    let parser_left = token_parser(surround_left);
+    let parser_right = token_parser(surround_right);
+    move |tokens: &[Token]| {
+        let (_, tokens) = parser_left(tokens)?;
+        let (t, tokens) = parser(tokens)?;
+        let (_, tokens) = parser_right(tokens)?;
+        Ok((t, tokens))
+    }
+}
 
 #[test]
 fn test_constant() {
