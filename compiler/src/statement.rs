@@ -286,121 +286,77 @@ impl DumpXml for Statements {
 #[cfg(test)]
 mod tests {
     use super::*;
-    //    #[test]
-    //    fn test_sentence() {
-    //        assert_eq!(
-    //            Statements::parse(&[
-    //                Token::Let,
-    //                Token::Identifier("x".to_string()),
-    //                Token::Eq,
-    //                Token::Identifier("sum".to_ascii_lowercase()),
-    //                Token::LParen,
-    //                Token::Identifier("p".to_ascii_lowercase()),
-    //                Token::LParen,
-    //                Token::StringConstant("foo".to_string()),
-    //                Token::RParen,
-    //                Token::RParen,
-    //                Token::Semicolon,
-    //                Token::If,
-    //                Token::LParen,
-    //                Token::True,
-    //                Token::RParen,
-    //                Token::LBrace,
-    //                Token::Return,
-    //                Token::IntegerConstant(20),
-    //                Token::Semicolon,
-    //                Token::RBrace,
-    //                Token::Else,
-    //                Token::LBrace,
-    //                Token::Return,
-    //                Token::IntegerConstant(100),
-    //                Token::Semicolon,
-    //                Token::RBrace,
-    //            ])
-    //            .unwrap()
-    //            .0
-    //            .dump_as_xml()
-    //            ,
-    //            ("a".to_string())
-    //        );
-    //    }
-    //
-    //    #[test]
-    //    fn test_sentence() {
-    //        assert_eq!(
-    //            ReturnStatement::parse(
-    //                &[Token::Return, Token::IntegerConstant(123), Token::Semicolon,]
-    //            )
-    //            .unwrap(),
-    //            (
-    //                Box::new(ReturnStatement(Box::new(Some(Box::new(Expression {
-    //                    term: Box::new(Term::IntegerConstant(123)),
-    //                    extras: Box::new(vec![])
-    //                }))))),
-    //                [].as_slice()
-    //            )
-    //        );
-    //
-    //        assert_eq!(
-    //            Statement::parse(&[Token::Return, Token::IntegerConstant(123), Token::Semicolon])
-    //                .unwrap(),
-    //            (
-    //                Box::new(Statement::Return(Box::new(ReturnStatement(Box::new(
-    //                    Some(Box::new(Expression {
-    //                        term: Box::new(Term::IntegerConstant(123)),
-    //                        extras: Box::new(vec![])
-    //                    }))
-    //                ))))),
-    //                [].as_slice()
-    //            )
-    //        );
-    //        assert_eq!(
-    //            Statements::parse(&[Token::Return, Token::IntegerConstant(123), Token::Semicolon])
-    //                .unwrap(),
-    //            (
-    //                Box::new(Statements {
-    //                    statements: Box::new(vec![Box::new(Statement::Return(Box::new(
-    //                        ReturnStatement(Box::new(Some(Box::new(Expression {
-    //                            term: Box::new(Term::IntegerConstant(123)),
-    //                            extras: Box::new(vec![])
-    //                        }))))
-    //                    )))])
-    //                }),
-    //                [].as_slice()
-    //            )
-    //        );
-    //
-    //        assert_eq!(
-    //            IfStatement::parse(&[
-    //                Token::If,
-    //                Token::LParen,
-    //                Token::IntegerConstant(123),
-    //                Token::RParen,
-    //                Token::LBrace,
-    //                Token::Return,
-    //                Token::IntegerConstant(321),
-    //                Token::Semicolon,
-    //                Token::RBrace
-    //            ])
-    //            .unwrap(),
-    //            (
-    //                Box::new(IfStatement {
-    //                    condition: Box::new(Expression {
-    //                        term: Box::new(Term::IntegerConstant(123)),
-    //                        extras: Box::new(vec![])
-    //                    }),
-    //                    then_body: Box::new(Statements {
-    //                        statements: Box::new(vec![Box::new(Statement::Return(Box::new(
-    //                            ReturnStatement(Box::new(Some(Box::new(Expression {
-    //                                term: Box::new(Term::IntegerConstant(321)),
-    //                                extras: Box::new(vec![])
-    //                            }))))
-    //                        ))),])
-    //                    }),
-    //                    else_body: Box::new(None)
-    //                }),
-    //                [].as_slice()
-    //            )
-    //        );
-    //    }
+
+    #[test]
+    fn test_sentence() {
+        assert_eq!(
+            ReturnStatement::parse(
+                &[Token::Return, Token::IntegerConstant(123), Token::Semicolon,]
+            )
+            .unwrap(),
+            (
+                Box::new(ReturnStatement(Box::new(Optional::new(Some(Box::new(
+                    Expression {
+                        term: Box::new(Term::Constant(Box::new(Constant::Integer(123i16)))),
+                        extras: Box::new(Collection::<Seq2<Op, Term>>::new(vec![]))
+                    }
+                )))))),
+                [].as_slice()
+            )
+        );
+
+        assert_eq!(
+            IfStatement::parse(&[
+                Token::If,
+                Token::LParen,
+                Token::IntegerConstant(123),
+                Token::RParen,
+                Token::LBrace,
+                Token::Return,
+                Token::IntegerConstant(321),
+                Token::Semicolon,
+                Token::RBrace,
+                Token::Else,
+                Token::LBrace,
+                Token::Return,
+                Token::IntegerConstant(111),
+                Token::Semicolon,
+                Token::RBrace,
+            ])
+            .unwrap(),
+            (
+                Box::new(IfStatement {
+                    condition: Box::new(Expression {
+                        term: Box::new(Term::Constant(Box::new(Constant::Integer(123i16)))),
+                        extras: Box::new(Collection::<Seq2<Op, Term>>::new(vec![]))
+                    }),
+                    then_body: Box::new(Statements {
+                        statements: Box::new(Collection::<Statement>::new(vec![Box::new(
+                            Statement::Return(Box::new(ReturnStatement(Box::new(Optional::new(
+                                Some(Box::new(Expression {
+                                    term: Box::new(Term::Constant(Box::new(Constant::Integer(
+                                        321i16
+                                    )))),
+                                    extras: Box::new(Collection::<Seq2<Op, Term>>::new(vec![]))
+                                }))
+                            )))))
+                        )]))
+                    }),
+                    else_body: Box::new(Some(Box::new(Statements {
+                        statements: Box::new(Collection::<Statement>::new(vec![Box::new(
+                            Statement::Return(Box::new(ReturnStatement(Box::new(Optional::new(
+                                Some(Box::new(Expression {
+                                    term: Box::new(Term::Constant(Box::new(Constant::Integer(
+                                        111i16
+                                    )))),
+                                    extras: Box::new(Collection::<Seq2<Op, Term>>::new(vec![]))
+                                }))
+                            )))))
+                        )]))
+                    })))
+                }),
+                [].as_slice()
+            )
+        );
+    }
 }

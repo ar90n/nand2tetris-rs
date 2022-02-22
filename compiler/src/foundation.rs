@@ -522,6 +522,12 @@ pub struct Optional<T: Parsable> {
     pub item: Option<Box<T>>,
 }
 
+impl<T: Parsable> Optional<T> {
+    pub fn new(item: Option<Box<T>>) -> Self {
+        Self { item }
+    }
+}
+
 impl<T: Parsable> Parsable for Optional<T> {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         if let anyhow::Result::Ok((item, rem_)) = T::parse(tokens) {
@@ -608,20 +614,6 @@ pub(crate) fn repeat_parser<T>(
     }
 }
 
-//pub(crate) fn repeat_parser2<T>(
-//    parser: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
-//) -> impl Fn(&[Token]) -> Result<(Box<Collection<T>>, &[Token])> {
-//    move |tokens: &[Token]| {
-//        let mut result = vec![];
-//        let mut tokens = tokens;
-//        while let anyhow::Result::Ok((item, rem)) = parser(tokens) {
-//            result.push(item);
-//            tokens = rem;
-//        }
-//        Ok((Box::new(result), tokens))
-//    }
-//}
-
 pub(crate) fn seq2_parser<T, U>(
     parser_t: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
     parser_u: impl Fn(&[Token]) -> Result<(Box<U>, &[Token])>,
@@ -685,58 +677,63 @@ fn test_constant() {
     assert!(Constant::parse(&[]).is_err());
 }
 
-#[test]
-fn test_unary_op() {
-    assert_eq!(
-        UnaryOp::parse(&[Token::Minus]).unwrap(),
-        (Box::new(UnaryOp::Minus), [].as_slice())
-    );
-    assert_eq!(
-        UnaryOp::parse(&[Token::Tilde, Token::Minus]).unwrap(),
-        (Box::new(UnaryOp::Tilde), [Token::Minus].as_slice())
-    );
-    assert!(UnaryOp::parse(&[Token::Plus]).is_err());
-    assert!(UnaryOp::parse(&[]).is_err());
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn test_op() {
-    assert_eq!(
-        Op::parse(&[Token::Plus]).unwrap(),
-        (Box::new(Op::Plus), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Minus]).unwrap(),
-        (Box::new(Op::Minus), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Asterisk]).unwrap(),
-        (Box::new(Op::Asterisk), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Slash]).unwrap(),
-        (Box::new(Op::Slash), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::And]).unwrap(),
-        (Box::new(Op::And), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Or]).unwrap(),
-        (Box::new(Op::Or), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Lt]).unwrap(),
-        (Box::new(Op::Lt), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Gt]).unwrap(),
-        (Box::new(Op::Gt), [].as_slice())
-    );
-    assert_eq!(
-        Op::parse(&[Token::Eq, Token::Gt]).unwrap(),
-        (Box::new(Op::Eq), [Token::Gt].as_slice())
-    );
-    assert!(Op::parse(&[Token::False]).is_err());
-    assert!(Op::parse(&[]).is_err());
+    #[test]
+    fn test_unary_op() {
+        assert_eq!(
+            UnaryOp::parse(&[Token::Minus]).unwrap(),
+            (Box::new(UnaryOp::Minus), [].as_slice())
+        );
+        assert_eq!(
+            UnaryOp::parse(&[Token::Tilde, Token::Minus]).unwrap(),
+            (Box::new(UnaryOp::Tilde), [Token::Minus].as_slice())
+        );
+        assert!(UnaryOp::parse(&[Token::Plus]).is_err());
+        assert!(UnaryOp::parse(&[]).is_err());
+    }
+
+    #[test]
+    fn test_op() {
+        assert_eq!(
+            Op::parse(&[Token::Plus]).unwrap(),
+            (Box::new(Op::Plus), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Minus]).unwrap(),
+            (Box::new(Op::Minus), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Asterisk]).unwrap(),
+            (Box::new(Op::Asterisk), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Slash]).unwrap(),
+            (Box::new(Op::Slash), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::And]).unwrap(),
+            (Box::new(Op::And), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Or]).unwrap(),
+            (Box::new(Op::Or), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Lt]).unwrap(),
+            (Box::new(Op::Lt), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Gt]).unwrap(),
+            (Box::new(Op::Gt), [].as_slice())
+        );
+        assert_eq!(
+            Op::parse(&[Token::Eq, Token::Gt]).unwrap(),
+            (Box::new(Op::Eq), [Token::Gt].as_slice())
+        );
+        assert!(Op::parse(&[Token::False]).is_err());
+        assert!(Op::parse(&[]).is_err());
+    }
 }

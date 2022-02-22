@@ -223,195 +223,30 @@ mod tests {
     use super::*;
 
     #[test]
-    //    fn test_expression_list() {
-    //        assert_eq!(
-    //            ExpressionList::parse(&[
-    //                Token::Identifier("a".to_string()),
-    //                Token::LParen,
-    //                Token::IntegerConstant(1),
-    //                Token::RParen,
-    //                Token::Semicolon
-    //            ])
-    //            .unwrap()
-    //            .0
-    //            .dump_as_xml(),
-    //            ("a".to_string())
-    //        );
-    //    }
-
-    //    #[test]
-    //    fn test_expression_list() {
-    //        assert_eq!(
-    //            ExpressionList::parse(&[Token::IntegerConstant(123)]).unwrap(),
-    //            (
-    //                Box::new(ExpressionList {
-    //                    expressions: vec![Box::new(Expression {
-    //                        term: Box::new(Term::Constant(123)),
-    //                        extras: Box::new(vec![])
-    //                    })]
-    //                }),
-    //                [].as_slice()
-    //            )
-    //        );
-    //        //assert_eq!(
-    //        //    ExpressionList::parse("1,2,3 4").unwrap(),
-    //        //    (
-    //        //        Box::new(ExpressionList {
-    //        //            expressions: vec![
-    //        //                Box::new(Expression {
-    //        //                    term: Box::new(Term::Constant(1)),
-    //        //                    extras: None
-    //        //                }),
-    //        //                Box::new(Expression {
-    //        //                    term: Box::new(Term::Constant(2)),
-    //        //                    extras: None
-    //        //                }),
-    //        //                Box::new(Expression {
-    //        //                    term: Box::new(Term::Constant(3)),
-    //        //                    extras: None
-    //        //                })
-    //        //            ]
-    //        //        }),
-    //        //        " 4"
-    //        //    )
-    //        //);
-    //        //assert!(ExpressionList::parse(");").is_err());
-    //    }
-    //
     #[test]
-    fn test_term() {
+    fn test_expression_list() {
         assert_eq!(
-            Term::parse(&[Token::IntegerConstant(123)]).unwrap(),
+            ExpressionList::parse(&[
+                Token::IntegerConstant(123),
+                Token::Comma,
+                Token::IntegerConstant(345)
+            ])
+            .unwrap(),
             (
-                Box::new(Term::Constant(Box::new(Constant::Integer(123)))),
+                Box::new(ExpressionList {
+                    expressions: Box::new(Collection::<Expression>::new(vec![
+                        Box::new(Expression {
+                            term: Box::new(Term::Constant(Box::new(Constant::Integer(123i16)))),
+                            extras: Box::new(Collection::<Seq2<Op, Term>>::new(vec![]))
+                        }),
+                        Box::new(Expression {
+                            term: Box::new(Term::Constant(Box::new(Constant::Integer(345i16)))),
+                            extras: Box::new(Collection::<Seq2<Op, Term>>::new(vec![]))
+                        })
+                    ]))
+                }),
                 [].as_slice()
             )
         );
-        //        assert_eq!(
-        //            Term::parse(&[Token::StringConstant("hello".to_string())]).unwrap(),
-        //            (Box::new(Term::Constant("hello".to_string())), [].as_slice())
-        //        );
-        //        assert_eq!(
-        //            Term::parse(&[Token::True]).unwrap(),
-        //            (
-        //                Box::new(Term::Constant(KeywordConstant::True)),
-        //                [].as_slice()
-        //            )
-        //        );
-        //        assert_eq!(
-        //            Term::parse(&[Token::False]).unwrap(),
-        //            (
-        //                Box::new(Term::Constant(KeywordConstant::False)),
-        //                [].as_slice()
-        //            )
-        //        );
-        //        assert_eq!(
-        //            Term::parse(&[Token::Null]).unwrap(),
-        //            (
-        //                Box::new(Term::Constant(KeywordConstant::Null)),
-        //                [].as_slice()
-        //            )
-        //        );
-        //        assert_eq!(
-        //            Term::parse(&[Token::This]).unwrap(),
-        //            (
-        //                Box::new(Term::Constant(KeywordConstant::This)),
-        //                [].as_slice()
-        //            )
-        //        );
-        //        assert_eq!(
-        //            Term::parse(&[Token::Identifier("abc".to_string())]).unwrap(),
-        //            (
-        //                Box::new(Term::Variable(Box::new(Identifier("abc".to_string())))),
-        //                [].as_slice()
-        //            )
-        //        );
-        //
-        //        assert_eq!(
-        //            Term::parse(&[
-        //                Token::Identifier("abc".to_string()),
-        //                Token::LBracket,
-        //                Token::IntegerConstant(123),
-        //                Token::Plus,
-        //                Token::IntegerConstant(321),
-        //                Token::RBracket
-        //            ])
-        //            .unwrap(),
-        //            (
-        //                Box::new(Term::ArrayAccess(
-        //                    Box::new(Identifier("abc".to_string())),
-        //                    Box::new(Expression {
-        //                        term: Box::new(Term::Constant(123)),
-        //                        extras: Box::new(vec![Box::new((
-        //                            Box::new(Op::Plus),
-        //                            Box::new(Term::Constant(321))
-        //                        ))])
-        //                    })
-        //                )),
-        //                [].as_slice()
-        //            )
-        //        );
-        //
-        //        assert_eq!(
-        //            Term::parse(&[
-        //                Token::Identifier("obj".to_string()),
-        //                Token::Period,
-        //                Token::Identifier("method".to_string()),
-        //                Token::LParen,
-        //                Token::IntegerConstant(321),
-        //                Token::RParen
-        //            ])
-        //            .unwrap(),
-        //            (
-        //                Box::new(Term::SubroutineCall(Box::new(SubroutineCall::MethodCall(
-        //                    Box::new(Identifier("obj".to_string())),
-        //                    Box::new(Identifier("method".to_string())),
-        //                    Box::new(ExpressionList {
-        //                        expressions: vec![Box::new(Expression {
-        //                            term: Box::new(Term::Constant(321)),
-        //                            extras: Box::new(vec![])
-        //                        })]
-        //                    })
-        //                )))),
-        //                [].as_slice()
-        //            )
-        //        );
-        //
-        //        assert_eq!(
-        //            Term::parse(&[Token::LParen, Token::IntegerConstant(321), Token::RParen]).unwrap(),
-        //            (
-        //                Box::new(Term::Expression(Box::new(Expression {
-        //                    term: Box::new(Term::Constant(321)),
-        //                    extras: Box::new(vec![])
-        //                }))),
-        //                [].as_slice()
-        //            )
-        //        );
-        //
-        //        assert_eq!(
-        //            Term::parse(&[Token::Minus, Token::IntegerConstant(321)]).unwrap(),
-        //            (
-        //                Box::new(Term::UnaryOp(
-        //                    Box::new(UnaryOp::Minus),
-        //                    Box::new(Term::Constant(321)),
-        //                )),
-        //                [].as_slice()
-        //            )
-        //        );
-        //
-        //        //        assert_eq!(
-        //        //            Term::parse(&[Token::Identifier("hello")]).unwrap(),
-        //        //            (Box::new(Term::Identifier("hello")), [].as_slice())
-        //        //        );
-        //        //        assert_eq!(
-        //        //            Term::parse(&[Token::IntegerConstant(123), Token::Asterisk]).unwrap(),
-        //        //            (
-        //        //                Box::new(Term::TermOp {
-        //        //                    term: Box::new(Term::Constant(123)),
-        //        //                    op: Box::new(Op::Asterisk),
-        //        //                }),
-        //        //                [Token::Asterisk].as_slice()
-        //        //            )
-        //        //        );
     }
 }
