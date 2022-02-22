@@ -30,26 +30,6 @@ impl Parsable for VarDec {
     }
 }
 
-impl DumpXml for VarDec {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("varDec", level);
-        let mut tags = vec![
-            open_tag,
-            Token::Var.dump_as_xml(level + 1),
-            self.type_.dump_as_xml(level + 1),
-            self.var_name.dump_as_xml(level + 1),
-        ];
-
-        self.extra_var_names.iter().for_each(|x| {
-            tags.push(Token::Comma.dump_as_xml(level + 1));
-            tags.push(x.dump_as_xml(level + 1));
-        });
-
-        tags.extend([Token::Semicolon.dump_as_xml(level + 1), close_tag]);
-        tags.join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SubroutineBody {
     pub var_decs: Box<Vec<Box<VarDec>>>,
@@ -70,25 +50,6 @@ impl Parsable for SubroutineBody {
             }),
             rem,
         ))
-    }
-}
-
-impl DumpXml for SubroutineBody {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("subroutineBody", level);
-        let mut tags = vec![open_tag, Token::LBrace.dump_as_xml(level + 1)];
-
-        self.var_decs.iter().for_each(|x| {
-            tags.push(x.dump_as_xml(level + 1));
-        });
-
-        tags.extend([
-            self.statements.dump_as_xml(level + 1),
-            Token::RBrace.dump_as_xml(level + 1),
-            close_tag,
-        ]);
-
-        tags.join("\n")
     }
 }
 
@@ -116,24 +77,6 @@ impl Parsable for ParameterList {
             }
         }
         Ok((Box::new(Self { params }), rem))
-    }
-}
-
-impl DumpXml for ParameterList {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("parameterList", level);
-        let mut tags = vec![open_tag];
-
-        self.params.iter().enumerate().for_each(|(i, pair)| {
-            if 0 < i {
-                tags.push(Token::Comma.dump_as_xml(level + 1));
-            }
-            tags.push(pair.0.dump_as_xml(level + 1));
-            tags.push(pair.1.dump_as_xml(level + 1));
-        });
-
-        tags.push(close_tag);
-        tags.join("\n")
     }
 }
 
@@ -167,24 +110,6 @@ impl Parsable for SubroutineDec {
     }
 }
 
-impl DumpXml for SubroutineDec {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("subroutineDec", level);
-        vec![
-            open_tag,
-            self.kind.dump_as_xml(level + 1),
-            self.type_.dump_as_xml(level + 1),
-            self.subroutine_name.dump_as_xml(level + 1),
-            Token::LParen.dump_as_xml(level + 1),
-            self.params.dump_as_xml(level + 1),
-            Token::RParen.dump_as_xml(level + 1),
-            self.body.dump_as_xml(level + 1),
-            close_tag,
-        ]
-        .join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClassVarDec {
     pub kind: Box<ClassVarKind>,
@@ -213,25 +138,6 @@ impl Parsable for ClassVarDec {
     }
 }
 
-impl DumpXml for ClassVarDec {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("classVarDec", level);
-        let mut tags = vec![
-            open_tag,
-            self.kind.dump_as_xml(level + 1),
-            self.type_.dump_as_xml(level + 1),
-            self.var_name.dump_as_xml(level + 1),
-        ];
-        self.extra_var_names.iter().for_each(|x| {
-            tags.push(Token::Comma.dump_as_xml(level + 1));
-            tags.push(x.dump_as_xml(level + 1));
-        });
-        tags.push(Token::Semicolon.dump_as_xml(level + 1));
-        tags.push(close_tag);
-        tags.join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Class {
     pub class_name: Box<Identifier>,
@@ -255,26 +161,5 @@ impl Parsable for Class {
             }),
             rem,
         ))
-    }
-}
-
-impl DumpXml for Class {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("class", level);
-        let mut tags = vec![
-            open_tag,
-            Token::Class.dump_as_xml(level + 1),
-            self.class_name.dump_as_xml(level + 1),
-            Token::LBrace.dump_as_xml(level + 1),
-        ];
-        for v in self.var_decs.iter() {
-            tags.push(v.dump_as_xml(level + 1));
-        }
-        for s in self.subroutine_decs.iter() {
-            tags.push(s.dump_as_xml(level + 1));
-        }
-        tags.push(Token::RBrace.dump_as_xml(level + 1));
-        tags.push(close_tag);
-        tags.join("\n")
     }
 }

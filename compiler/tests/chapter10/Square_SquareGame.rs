@@ -1,4 +1,4 @@
-use compiler::foundation::DumpXml;
+use compiler::dump_xml::*;
 use compiler::parser::parse;
 use compiler::tokenizer::tokenize;
 

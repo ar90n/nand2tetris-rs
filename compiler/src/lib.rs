@@ -1,3 +1,4 @@
+pub mod dump_xml;
 pub mod token;
 pub mod tokenizer;
 pub mod parser;

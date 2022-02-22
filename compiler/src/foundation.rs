@@ -6,71 +6,6 @@ pub trait Parsable {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])>;
 }
 
-pub trait DumpXml {
-    fn dump_as_xml(&self, level: usize) -> String;
-    fn indent(&self, level: usize) -> String {
-        "  ".repeat(level)
-    }
-    fn tag(&self, name: &str, level: usize) -> (String, String) {
-        let indent = self.indent(level);
-        let open_tag = format!("{}<{}>", indent, name);
-        let close_tag = format!("{}</{}>", indent, name);
-        (open_tag, close_tag)
-    }
-}
-
-impl DumpXml for Token {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let mut ret = self.indent(level);
-        ret += &match self {
-            Self::LParen => "<symbol> ( </symbol>".to_string(),
-            Self::RParen => "<symbol> ) </symbol>".to_string(),
-            Self::LBrace => "<symbol> { </symbol>".to_string(),
-            Self::RBrace => "<symbol> } </symbol>".to_string(),
-            Self::LBracket => "<symbol> [ </symbol>".to_string(),
-            Self::RBracket => "<symbol> ] </symbol>".to_string(),
-            Self::Period => "<symbol> . </symbol>".to_string(),
-            Self::Comma => "<symbol> , </symbol>".to_string(),
-            Self::Semicolon => "<symbol> ; </symbol>".to_string(),
-            Self::Plus => "<symbol> + </symbol>".to_string(),
-            Self::Minus => "<symbol> - </symbol>".to_string(),
-            Self::Asterisk => "<symbol> * </symbol>".to_string(),
-            Self::Slash => "<symbol> / </symbol>".to_string(),
-            Self::And => "<symbol> &amp; </symbol>".to_string(),
-            Self::Or => "<symbol> | </symbol>".to_string(),
-            Self::Lt => "<symbol> &lt; </symbol>".to_string(),
-            Self::Gt => "<symbol> &gt; </symbol>".to_string(),
-            Self::Eq => "<symbol> = </symbol>".to_string(),
-            Self::Tilde => "<symbol> ~ </symbol>".to_string(),
-            Self::Class => "<keyword> class </keyword>".to_string(),
-            Self::Constructor => "<keyword> constructor </keyword>".to_string(),
-            Self::Function => "<keyword> function </keyword>".to_string(),
-            Self::Method => "<keyword> method </keyword>".to_string(),
-            Self::Field => "<keyword> field </keyword>".to_string(),
-            Self::Static => "<keyword> static </keyword>".to_string(),
-            Self::Var => "<keyword> var </keyword>".to_string(),
-            Self::Int => "<keyword> int </keyword>".to_string(),
-            Self::Char => "<keyword> char </keyword>".to_string(),
-            Self::Boolean => "<keyword> boolean </keyword>".to_string(),
-            Self::Void => "<keyword> void </keyword>".to_string(),
-            Self::True => "<keyword> true </keyword>".to_string(),
-            Self::False => "<keyword> false </keyword>".to_string(),
-            Self::Null => "<keyword> null </keyword>".to_string(),
-            Self::This => "<keyword> this </keyword>".to_string(),
-            Self::Let => "<keyword> let </keyword>".to_string(),
-            Self::Do => "<keyword> do </keyword>".to_string(),
-            Self::If => "<keyword> if </keyword>".to_string(),
-            Self::Else => "<keyword> else </keyword>".to_string(),
-            Self::While => "<keyword> while </keyword>".to_string(),
-            Self::Return => "<keyword> return </keyword>".to_string(),
-            Self::Identifier(s) => format!("<identifier> {} </identifier>", s),
-            Self::StringConstant(s) => format!("<stringConstant> {} </stringConstant>", s),
-            Self::IntegerConstant(n) => format!("<integerConstant> {} </integerConstant>", n),
-            Self::EOF => String::default(),
-        };
-        ret
-    }
-}
 
 pub struct PlaceHolder {
     pub token: Token,
@@ -83,23 +18,11 @@ impl Parsable for PlaceHolder {
     }
 }
 
-impl DumpXml for PlaceHolder {
-    fn dump_as_xml(&self, level: usize) -> String {
-        self.token.dump_as_xml(level)
-    }
-}
-
 pub struct Empty {}
 
 impl Parsable for Empty {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         Ok((Box::new(Self {}), tokens))
-    }
-}
-
-impl DumpXml for Empty {
-    fn dump_as_xml(&self, _: usize) -> String {
-        String::default()
     }
 }
 
@@ -150,13 +73,6 @@ impl Parsable for Constant {
     }
 }
 
-impl DumpXml for Constant {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UnaryOp {
     Minus,
@@ -189,13 +105,6 @@ impl Parsable for UnaryOp {
         let (t, rem) = tokens.split_first().context("tokens are empty")?;
         let k = Self::try_from(t.clone())?;
         Ok((Box::new(k), rem))
-    }
-}
-
-impl DumpXml for UnaryOp {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
     }
 }
 
@@ -255,12 +164,6 @@ impl Parsable for Op {
     }
 }
 
-impl DumpXml for Op {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Identifier(String);
@@ -287,13 +190,6 @@ impl Parsable for Identifier {
         let (t, rem) = tokens.split_first().context("tokens are empty")?;
         let k = Self::try_from(t.clone())?;
         Ok((Box::new(k), rem))
-    }
-}
-
-impl DumpXml for Identifier {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
     }
 }
 
@@ -338,12 +234,6 @@ impl Parsable for Type {
     }
 }
 
-impl DumpXml for Type {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ClassVarKind {
@@ -377,13 +267,6 @@ impl Parsable for ClassVarKind {
         let (t, rem) = tokens.split_first().context("tokens are empty")?;
         let k = Self::try_from(t.clone())?;
         Ok((Box::new(k), rem))
-    }
-}
-
-impl DumpXml for ClassVarKind {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
     }
 }
 
@@ -425,12 +308,6 @@ impl Parsable for SubroutineKind {
     }
 }
 
-impl DumpXml for SubroutineKind {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SubroutineType {
@@ -476,12 +353,6 @@ impl Parsable for SubroutineType {
     }
 }
 
-impl DumpXml for SubroutineType {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let t: Token = self.clone().into();
-        t.dump_as_xml(level)
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Collection<T: Parsable> {
@@ -507,15 +378,6 @@ impl<T: Parsable> Parsable for Collection<T> {
     }
 }
 
-impl<T: Parsable + DumpXml> DumpXml for Collection<T> {
-    fn dump_as_xml(&self, level: usize) -> String {
-        self.items
-            .iter()
-            .map(|item| item.dump_as_xml(level))
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Optional<T: Parsable> {
@@ -538,15 +400,6 @@ impl<T: Parsable> Parsable for Optional<T> {
     }
 }
 
-impl<T: Parsable + DumpXml> DumpXml for Optional<T> {
-    fn dump_as_xml(&self, level: usize) -> String {
-        match &self.item {
-            Some(item) => item.dump_as_xml(level),
-            None => String::new(),
-        }
-    }
-}
-
 impl<T: Parsable, U: Parsable> Parsable for (Box<T>, Box<U>) {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (t, rem) = T::parse(tokens)?;
@@ -555,12 +408,6 @@ impl<T: Parsable, U: Parsable> Parsable for (Box<T>, Box<U>) {
     }
 }
 
-impl<T: Parsable + DumpXml, U: Parsable + DumpXml> DumpXml for (Box<T>, Box<U>) {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (t, u) = self;
-        format!("{}\n{}", t.dump_as_xml(level), u.dump_as_xml(level))
-    }
-}
 
 pub type Seq2<T, U> = (Box<T>, Box<U>);
 pub type Seq3<T, U, V> = (Box<T>, Box<U>, Box<V>);

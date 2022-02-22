@@ -28,23 +28,6 @@ impl Parsable for ExpressionList {
     }
 }
 
-impl DumpXml for ExpressionList {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("expressionList", level);
-        let mut tags = vec![open_tag];
-
-        for (i, expression) in self.expressions.items.iter().enumerate() {
-            if 0 < i {
-                tags.push(Token::Comma.dump_as_xml(level + 1));
-            }
-            tags.push(expression.dump_as_xml(level + 1));
-        }
-
-        tags.push(close_tag);
-        tags.join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SubroutineCall {
     MethodCall(Box<Identifier>, Box<Identifier>, Box<ExpressionList>),
@@ -71,33 +54,6 @@ impl SubroutineCall {
 impl Parsable for SubroutineCall {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         Self::parse_method_call(tokens).or_else(|_| Self::parse_function_call(tokens))
-    }
-}
-
-impl DumpXml for SubroutineCall {
-    fn dump_as_xml(&self, level: usize) -> String {
-        match self {
-            Self::MethodCall(var_name, method_name, args) => {
-                let lines = vec![
-                    var_name.dump_as_xml(level),
-                    Token::Period.dump_as_xml(level),
-                    method_name.dump_as_xml(level),
-                    Token::LParen.dump_as_xml(level),
-                    args.dump_as_xml(level),
-                    Token::RParen.dump_as_xml(level),
-                ];
-                lines.join("\n")
-            }
-            Self::FunctionCall(function_name, args) => {
-                let lines = vec![
-                    function_name.dump_as_xml(level),
-                    Token::LParen.dump_as_xml(level),
-                    args.dump_as_xml(level),
-                    Token::RParen.dump_as_xml(level),
-                ];
-                lines.join("\n")
-            }
-        }
     }
 }
 
@@ -160,33 +116,6 @@ impl Parsable for Term {
     }
 }
 
-impl DumpXml for Term {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("term", level);
-        let mut tags = vec![open_tag];
-        let body = match self {
-            Self::Constant(c) => vec![c.dump_as_xml(level + 1)],
-            Self::Variable(v) => vec![v.dump_as_xml(level + 1)],
-            Self::ArrayAccess(v, e) => vec![
-                v.dump_as_xml(level + 1),
-                Token::LBracket.dump_as_xml(level + 1),
-                e.dump_as_xml(level + 1),
-                Token::RBracket.dump_as_xml(level + 1),
-            ],
-            Self::SubroutineCall(s) => vec![s.dump_as_xml(level + 1)],
-            Self::Expression(e) => vec![
-                Token::LParen.dump_as_xml(level + 1),
-                e.dump_as_xml(level + 1),
-                Token::RParen.dump_as_xml(level + 1),
-            ],
-            Self::UnaryOp(op, t) => vec![op.dump_as_xml(level + 1), t.dump_as_xml(level + 1)],
-        };
-        tags.extend(body);
-        tags.push(close_tag);
-        tags.join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Expression {
     pub term: Box<Term>,
@@ -201,22 +130,6 @@ impl Parsable for Expression {
     }
 }
 
-impl DumpXml for Expression {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("expression", level);
-
-        let mut tags = vec![open_tag, self.term.dump_as_xml(level + 1)];
-
-        self.extras.items.iter().for_each(|pair| {
-            let (ref op, ref term) = **pair;
-            tags.push(op.dump_as_xml(level + 1));
-            tags.push(term.dump_as_xml(level + 1));
-        });
-
-        tags.push(close_tag);
-        tags.join("\n")
-    }
-}
 
 #[cfg(test)]
 mod tests {

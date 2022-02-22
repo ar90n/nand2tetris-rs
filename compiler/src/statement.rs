@@ -5,7 +5,7 @@ use super::foundation::*;
 use super::token::Token;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ReturnStatement(Box<Optional<Expression>>);
+pub struct ReturnStatement(pub Box<Optional<Expression>>);
 
 impl Parsable for ReturnStatement {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
@@ -16,25 +16,8 @@ impl Parsable for ReturnStatement {
     }
 }
 
-impl DumpXml for ReturnStatement {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("returnStatement", level);
-        [
-            open_tag,
-            Token::Return.dump_as_xml(level + 1),
-            self.0.dump_as_xml(level + 1),
-            Token::Semicolon.dump_as_xml(level + 1),
-            close_tag,
-        ]
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct DoStatement(Box<SubroutineCall>);
+pub struct DoStatement(pub Box<SubroutineCall>);
 
 impl Parsable for DoStatement {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
@@ -45,24 +28,10 @@ impl Parsable for DoStatement {
     }
 }
 
-impl DumpXml for DoStatement {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("doStatement", level);
-        vec![
-            open_tag,
-            Token::Do.dump_as_xml(level + 1),
-            self.0.dump_as_xml(level + 1),
-            Token::Semicolon.dump_as_xml(level + 1),
-            close_tag,
-        ]
-        .join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WhileStatement {
-    condition: Box<Expression>,
-    body: Box<Statements>,
+    pub condition: Box<Expression>,
+    pub body: Box<Statements>,
 }
 
 impl Parsable for WhileStatement {
@@ -77,29 +46,11 @@ impl Parsable for WhileStatement {
     }
 }
 
-impl DumpXml for WhileStatement {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("whileStatement", level);
-        vec![
-            open_tag,
-            Token::While.dump_as_xml(level + 1),
-            Token::LParen.dump_as_xml(level + 1),
-            self.condition.dump_as_xml(level + 1),
-            Token::RParen.dump_as_xml(level + 1),
-            Token::LBrace.dump_as_xml(level + 1),
-            self.body.dump_as_xml(level + 1),
-            Token::RBrace.dump_as_xml(level + 1),
-            close_tag,
-        ]
-        .join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IfStatement {
-    condition: Box<Expression>,
-    then_body: Box<Statements>,
-    else_body: Box<Option<Box<Statements>>>,
+    pub condition: Box<Expression>,
+    pub then_body: Box<Statements>,
+    pub else_body: Box<Option<Box<Statements>>>,
 }
 
 impl Parsable for IfStatement {
@@ -125,35 +76,11 @@ impl Parsable for IfStatement {
     }
 }
 
-impl DumpXml for IfStatement {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("ifStatement", level);
-        let mut tags = vec![
-            open_tag,
-            Token::If.dump_as_xml(level + 1),
-            Token::LParen.dump_as_xml(level + 1),
-            self.condition.dump_as_xml(level + 1),
-            Token::RParen.dump_as_xml(level + 1),
-            Token::LBrace.dump_as_xml(level + 1),
-            self.then_body.dump_as_xml(level + 1),
-            Token::RBrace.dump_as_xml(level + 1),
-        ];
-        if let Some(ref v) = *self.else_body {
-            tags.push(Token::Else.dump_as_xml(level + 1));
-            tags.push(Token::LBrace.dump_as_xml(level + 1));
-            tags.push(v.dump_as_xml(level + 1));
-            tags.push(Token::RBrace.dump_as_xml(level + 1));
-        }
-        tags.push(close_tag);
-        tags.join("\n")
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LetStatement {
-    var_name: Box<Identifier>,
-    array_size: Box<Option<Box<Expression>>>,
-    expression: Box<Expression>,
+    pub var_name: Box<Identifier>,
+    pub array_size: Box<Option<Box<Expression>>>,
+    pub expression: Box<Expression>,
 }
 
 impl Parsable for LetStatement {
@@ -177,33 +104,6 @@ impl Parsable for LetStatement {
             }),
             rem,
         ))
-    }
-}
-
-impl DumpXml for LetStatement {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("letStatement", level);
-        let mut tags = vec![
-            open_tag,
-            Token::Let.dump_as_xml(level + 1),
-            self.var_name.dump_as_xml(level + 1),
-        ];
-
-        if let Some(ref v) = *self.array_size {
-            tags.extend([
-                Token::LBracket.dump_as_xml(level + 1),
-                v.dump_as_xml(level + 1),
-                Token::RBracket.dump_as_xml(level + 1),
-            ]);
-        }
-
-        tags.extend([
-            Token::Eq.dump_as_xml(level + 1),
-            self.expression.dump_as_xml(level + 1),
-            Token::Semicolon.dump_as_xml(level + 1),
-            close_tag,
-        ]);
-        tags.join("\n")
     }
 }
 
@@ -248,18 +148,6 @@ impl Parsable for Statement {
     }
 }
 
-impl DumpXml for Statement {
-    fn dump_as_xml(&self, level: usize) -> String {
-        match self {
-            Self::Let(v) => v.dump_as_xml(level),
-            Self::If(v) => v.dump_as_xml(level),
-            Self::While(v) => v.dump_as_xml(level),
-            Self::Do(v) => v.dump_as_xml(level),
-            Self::Return(v) => v.dump_as_xml(level),
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Statements {
     pub statements: Box<Collection<Statement>>,
@@ -269,17 +157,6 @@ impl Parsable for Statements {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (statements, rem) = Collection::<Statement>::parse(tokens)?;
         Ok((Box::new(Self { statements }), rem))
-    }
-}
-
-impl DumpXml for Statements {
-    fn dump_as_xml(&self, level: usize) -> String {
-        let (open_tag, close_tag) = self.tag("statements", level);
-        [open_tag, self.statements.dump_as_xml(level + 1), close_tag]
-            .into_iter()
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>()
-            .join("\n")
     }
 }
 
