@@ -8,6 +8,12 @@ pub struct ExpressionList {
     pub expressions: Box<Collection<Expression>>,
 }
 
+impl ExpressionList {
+    pub fn len(&self) -> usize {
+        self.expressions.len()
+    }
+}
+
 impl Parsable for ExpressionList {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (vs, rem) = option_parser(seq2_parser(
@@ -30,8 +36,8 @@ impl Parsable for ExpressionList {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SubroutineCall {
-    MethodCall(Box<Identifier>, Box<Identifier>, Box<ExpressionList>),
-    FunctionCall(Box<Identifier>, Box<ExpressionList>),
+    ExternalCall(Box<Identifier>, Box<Identifier>, Box<ExpressionList>),
+    InternalCall(Box<Identifier>, Box<ExpressionList>),
 }
 impl SubroutineCall {
     pub fn parse_method_call(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
@@ -40,14 +46,14 @@ impl SubroutineCall {
         let (method_name, rem) = Identifier::parse(rem)?;
         let (args, rem) =
             surround_parser(ExpressionList::parse, Token::LParen, Token::RParen)(rem)?;
-        Ok((Box::new(Self::MethodCall(var_name, method_name, args)), rem))
+        Ok((Box::new(Self::ExternalCall(var_name, method_name, args)), rem))
     }
 
     pub fn parse_function_call(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (function_name, rem) = Identifier::parse(tokens)?;
         let (args, rem) =
             surround_parser(ExpressionList::parse, Token::LParen, Token::RParen)(rem)?;
-        Ok((Box::new(Self::FunctionCall(function_name, args)), rem))
+        Ok((Box::new(Self::InternalCall(function_name, args)), rem))
     }
 }
 

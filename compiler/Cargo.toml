@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.53"
+rand = "0.8.5"
+vm = { path = "../vm"}

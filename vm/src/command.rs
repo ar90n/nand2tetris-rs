@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Segment {
     Argument,
@@ -26,6 +28,22 @@ impl Segment {
             "temp" => Ok((Segment::Temp, s)),
             _ => Err(anyhow::anyhow!("Unknown segment: {}", segment)),
         }
+    }
+}
+
+impl fmt::Display for Segment {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let label = match self {
+            Self::Argument => "argument",
+            Self::Local => "local",
+            Self::Static => "static",
+            Self::Constant => "constant",
+            Self::This => "this",
+            Self::That => "that",
+            Self::Pointer => "pointer",
+            Self::Temp => "temp",
+        };
+        write!(f, "{}", label)
     }
 }
 
@@ -63,9 +81,7 @@ impl Command {
 
     fn parse_label(s: &str) -> anyhow::Result<(String, &str)> {
         let s = s.trim();
-        let end = s
-            .find(|c| c == ' ' || c == '\t')
-            .unwrap_or(s.len());
+        let end = s.find(|c| c == ' ' || c == '\t').unwrap_or(s.len());
         let (label, s) = s.split_at(end);
         Ok((label.to_string(), s))
     }
@@ -77,9 +93,7 @@ impl Command {
             .ok_or(anyhow::anyhow!("No space found in {} 1", s))?;
         let (name, s) = s.split_at(end);
         let s = s.trim();
-        let end = s
-            .find(|c| c == ' ' || c == '\t')
-            .unwrap_or(s.len());
+        let end = s.find(|c| c == ' ' || c == '\t').unwrap_or(s.len());
         let (arg_count, _) = s.split_at(end);
         let arg_count = arg_count.parse::<u16>()?;
         Ok((name.to_string(), arg_count))
@@ -129,6 +143,30 @@ impl Command {
                 Ok(Command::IfGoto(s))
             }
             _ => Err(anyhow::anyhow!("Unknown command: {}", command)),
+        }
+    }
+
+    pub fn dump(&self) -> String {
+        match self {
+            Command::Push(segment, index) => format!("push {} {}", segment, index),
+            Command::Pop(segment, index) => format!("pop {} {}", segment, index),
+            Command::Add => "add".to_string(),
+            Command::Sub => "sub".to_string(),
+            Command::Neg => "neg".to_string(),
+            Command::Eq => "eq".to_string(),
+            Command::Gt => "gt".to_string(),
+            Command::Lt => "lt".to_string(),
+            Command::And => "and".to_string(),
+            Command::Or => "or".to_string(),
+            Command::Not => "not".to_string(),
+            Command::Function(name, arg_count) => {
+                format!("function {} {}", name, arg_count)
+            }
+            Command::Call(name, arg_count) => format!("call {} {}", name, arg_count),
+            Command::Return => "return".to_string(),
+            Command::Label(label) => format!("label {}", label),
+            Command::Goto(label) => format!("goto {}", label),
+            Command::IfGoto(label) => format!("if-goto {}", label),
         }
     }
 }

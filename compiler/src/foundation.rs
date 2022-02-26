@@ -166,7 +166,7 @@ impl Parsable for Op {
 
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Identifier(String);
+pub struct Identifier(pub String);
 
 impl TryFrom<Token> for Identifier {
     type Error = Error;
@@ -235,7 +235,7 @@ impl Parsable for Type {
 }
 
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ClassVarKind {
     Field,
     Static,
@@ -270,7 +270,7 @@ impl Parsable for ClassVarKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SubroutineKind {
     Constructor,
     Function,
@@ -362,6 +362,10 @@ pub struct Collection<T: Parsable> {
 impl<T: Parsable> Collection<T> {
     pub fn new(items: Vec<Box<T>>) -> Self {
         Self { items }
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
     }
 }
 
@@ -471,6 +475,18 @@ pub(crate) fn seq2_parser<T, U>(
         Ok((Box::new((t, u)), tokens))
     }
 }
+
+pub(crate) fn take1_parser<T, U>(
+    parser_t: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,
+    parser_u: impl Fn(&[Token]) -> Result<(Box<U>, &[Token])>,
+) -> impl Fn(&[Token]) -> Result<(Box<T>, &[Token])> {
+    move |tokens: &[Token]| {
+        let (t, tokens) = parser_t(tokens)?;
+        let (_, tokens) = parser_u(tokens)?;
+        Ok((t, tokens))
+    }
+}
+
 
 pub(crate) fn drop1_parser<T, U>(
     parser_t: impl Fn(&[Token]) -> Result<(Box<T>, &[Token])>,

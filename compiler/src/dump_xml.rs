@@ -178,7 +178,7 @@ impl DumpXml for ExpressionList {
 impl DumpXml for SubroutineCall {
     fn dump_as_xml(&self, level: usize) -> String {
         match self {
-            Self::MethodCall(var_name, method_name, args) => {
+            Self::ExternalCall(var_name, method_name, args) => {
                 let lines = vec![
                     var_name.dump_as_xml(level),
                     Token::Period.dump_as_xml(level),
@@ -189,7 +189,7 @@ impl DumpXml for SubroutineCall {
                 ];
                 lines.join("\n")
             }
-            Self::FunctionCall(function_name, args) => {
+            Self::InternalCall(function_name, args) => {
                 let lines = vec![
                     function_name.dump_as_xml(level),
                     Token::LParen.dump_as_xml(level),
@@ -252,11 +252,12 @@ impl DumpXml for VarDec {
             open_tag,
             Token::Var.dump_as_xml(level + 1),
             self.type_.dump_as_xml(level + 1),
-            self.var_name.dump_as_xml(level + 1),
         ];
 
-        self.extra_var_names.iter().for_each(|x| {
-            tags.push(Token::Comma.dump_as_xml(level + 1));
+        self.var_names.iter().enumerate().for_each(|(i, x)| {
+            if 0 < i {
+                tags.push(Token::Comma.dump_as_xml(level + 1));
+            }
             tags.push(x.dump_as_xml(level + 1));
         });
 
@@ -325,10 +326,11 @@ impl DumpXml for ClassVarDec {
             open_tag,
             self.kind.dump_as_xml(level + 1),
             self.type_.dump_as_xml(level + 1),
-            self.var_name.dump_as_xml(level + 1),
         ];
-        self.extra_var_names.iter().for_each(|x| {
-            tags.push(Token::Comma.dump_as_xml(level + 1));
+        self.var_names.iter().enumerate().for_each(|(i, x)| {
+            if 0 < i {
+                tags.push(Token::Comma.dump_as_xml(level + 1));
+            }
             tags.push(x.dump_as_xml(level + 1));
         });
         tags.push(Token::Semicolon.dump_as_xml(level + 1));

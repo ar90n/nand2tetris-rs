@@ -7,26 +7,19 @@ use super::token::Token;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VarDec {
     pub type_: Box<Type>,
-    pub var_name: Box<Identifier>,
-    pub extra_var_names: Box<Vec<Box<Identifier>>>,
+    pub var_names: Box<Vec<Box<Identifier>>>,
 }
 
 impl Parsable for VarDec {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (_, rem) = token_parser(Token::Var)(tokens)?;
         let (type_, rem) = Type::parse(rem)?;
-        let (var_name, rem) = Identifier::parse(rem)?;
-        let (extra_var_names, rem) =
-            repeat_parser(drop1_parser(token_parser(Token::Comma), Identifier::parse))(rem)?;
+        let (var_names, rem) = repeat_parser(take1_parser(
+            Identifier::parse,
+            option_parser(token_parser(Token::Comma)),
+        ))(rem)?;
         let (_, rem) = token_parser(Token::Semicolon)(rem)?;
-        Ok((
-            Box::new(Self {
-                type_,
-                var_name,
-                extra_var_names,
-            }),
-            rem,
-        ))
+        Ok((Box::new(Self { type_, var_names }), rem))
     }
 }
 
@@ -56,6 +49,12 @@ impl Parsable for SubroutineBody {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParameterList {
     pub params: Vec<Box<(Box<Type>, Box<Identifier>)>>,
+}
+
+impl ParameterList {
+    pub fn len(&self) -> usize {
+        self.params.len()
+    }
 }
 
 impl Parsable for ParameterList {
@@ -114,24 +113,24 @@ impl Parsable for SubroutineDec {
 pub struct ClassVarDec {
     pub kind: Box<ClassVarKind>,
     pub type_: Box<Type>,
-    pub var_name: Box<Identifier>,
-    pub extra_var_names: Box<Vec<Box<Identifier>>>,
+    pub var_names: Box<Vec<Box<Identifier>>>,
 }
 
 impl Parsable for ClassVarDec {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
         let (kind, rem) = ClassVarKind::parse(tokens)?;
         let (type_, rem) = Type::parse(rem)?;
-        let (var_name, rem) = Identifier::parse(rem)?;
-        let (extra_var_names, rem) =
-            repeat_parser(drop1_parser(token_parser(Token::Comma), Identifier::parse))(rem)?;
+        let (var_names, rem) = repeat_parser(take1_parser(
+            Identifier::parse,
+            option_parser(token_parser(Token::Comma)),
+        ))(rem)?;
         let (_, rem) = token_parser(Token::Semicolon)(rem)?;
+
         Ok((
             Box::new(Self {
                 kind,
                 type_,
-                var_name,
-                extra_var_names,
+                var_names: var_names,
             }),
             rem,
         ))
@@ -143,10 +142,19 @@ pub struct Class {
     pub class_name: Box<Identifier>,
     pub var_decs: Box<Vec<Box<ClassVarDec>>>,
     pub subroutine_decs: Box<Vec<Box<SubroutineDec>>>,
+    pub string_constants: Vec<String>,
 }
 
 impl Parsable for Class {
     fn parse(tokens: &[Token]) -> Result<(Box<Self>, &[Token])> {
+        let string_constants = tokens
+            .iter()
+            .filter_map(|t| match t {
+                Token::StringConstant(s) => Some(s.clone()),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+
         let (_, rem) = token_parser(Token::Class)(tokens)?;
         let (class_name, rem) = Identifier::parse(rem)?;
         let (_, rem) = token_parser(Token::LBrace)(rem)?;
@@ -158,6 +166,7 @@ impl Parsable for Class {
                 class_name,
                 var_decs,
                 subroutine_decs,
+                string_constants,
             }),
             rem,
         ))
