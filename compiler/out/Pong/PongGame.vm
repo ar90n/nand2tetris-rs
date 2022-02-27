@@ -1,0 +1,328 @@
+function PongGame.new 1
+push constant 0
+push constant 7
+call Memory.alloc 1
+pop pointer 0
+push constant 8
+call String.new 1
+push constant 83
+call String.appendChar 2
+push constant 99
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 58
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 48
+call String.appendChar 2
+pop local 0
+call Screen.clearScreen 0
+pop temp 0
+push constant 50
+pop this 6
+push constant 230
+push constant 229
+push this 6
+push constant 7
+call Bat.new 4
+pop this 0
+push constant 253
+push constant 222
+push constant 0
+push constant 511
+push constant 0
+push constant 229
+call Ball.new 6
+pop this 1
+push this 1
+push constant 400
+push constant 0
+call Ball.setDestination 3
+pop temp 0
+push constant 0
+push constant 238
+push constant 511
+push constant 240
+call Screen.drawRectangle 4
+pop temp 0
+push constant 22
+push constant 0
+call Output.moveCursor 2
+pop temp 0
+push local 0
+call Output.printString 1
+pop temp 0
+push constant 0
+pop this 3
+push constant 0
+pop this 4
+push constant 0
+pop this 2
+push constant 0
+pop this 5
+push local 0
+call String.dispose 1
+push pointer 0
+return
+function PongGame.dispose 0
+push argument 0
+pop pointer 0
+push this 0
+call Bat.dispose 1
+pop temp 0
+push this 1
+call Ball.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function PongGame.newInstance 0
+call PongGame.new 0
+pop static 0
+push constant 0
+return
+function PongGame.getInstance 0
+push static 0
+return
+function PongGame.run 2
+push constant 0
+push constant 0
+push argument 0
+pop pointer 0
+push constant 9
+call String.new 1
+push constant 71
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 79
+call String.appendChar 2
+push constant 118
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+pop local 1
+label _CovboloJ
+push this 3
+not
+not
+if-goto _IBntwToH
+label _P1RPYl77
+push local 0
+push constant 0
+eq
+push this 3
+not
+and
+not
+if-goto _fYALxvjN
+call Keyboard.keyPressed 0
+pop local 0
+push this 0
+call Bat.move 1
+pop temp 0
+push pointer 0
+call PongGame.moveBall 1
+pop temp 0
+push constant 50
+call Sys.wait 1
+pop temp 0
+goto _P1RPYl77
+label _fYALxvjN
+push local 0
+push constant 130
+eq
+if-goto _4lLrbrNCqQ66b8gl
+push local 0
+push constant 132
+eq
+if-goto _lkan7dW4ttgpJO9m
+push local 0
+push constant 140
+eq
+if-goto _6HXfiJGnhKvNMeyh
+goto _r5c9HXwkiwaRnHTt
+label _6HXfiJGnhKvNMeyh
+push constant 0
+not
+pop this 3
+label _r5c9HXwkiwaRnHTt
+goto _svlSnRzMqDVEa4AY
+label _lkan7dW4ttgpJO9m
+push this 0
+push constant 2
+call Bat.setDirection 2
+pop temp 0
+label _svlSnRzMqDVEa4AY
+goto _k0QZZ6mTJDCWEjrl
+label _4lLrbrNCqQ66b8gl
+push this 0
+push constant 1
+call Bat.setDirection 2
+pop temp 0
+label _k0QZZ6mTJDCWEjrl
+label _czgllsqt
+push local 0
+push constant 0
+eq
+not
+push this 3
+not
+and
+not
+if-goto _DrpGvkBi
+call Keyboard.keyPressed 0
+pop local 0
+push this 0
+call Bat.move 1
+pop temp 0
+push pointer 0
+call PongGame.moveBall 1
+pop temp 0
+push constant 50
+call Sys.wait 1
+pop temp 0
+goto _czgllsqt
+label _DrpGvkBi
+goto _CovboloJ
+label _IBntwToH
+push this 3
+if-goto _8YOE5TMkRlLggVUg
+goto _Z2W3rJUu7q3GBWyv
+label _8YOE5TMkRlLggVUg
+push constant 10
+push constant 27
+call Output.moveCursor 2
+pop temp 0
+push local 1
+call Output.printString 1
+pop temp 0
+label _Z2W3rJUu7q3GBWyv
+push local 1
+call String.dispose 1
+push constant 0
+return
+function PongGame.moveBall 5
+push constant 0
+push constant 0
+push constant 0
+push constant 0
+push constant 0
+push argument 0
+pop pointer 0
+push this 1
+call Ball.move 1
+pop this 2
+push this 2
+push constant 0
+gt
+push this 2
+push this 5
+eq
+not
+and
+if-goto _2suI6KXP5JCGbHwR
+goto _PwRf2Kqq2OZmbBWn
+label _2suI6KXP5JCGbHwR
+push this 2
+pop this 5
+push constant 0
+pop local 0
+push this 0
+call Bat.getLeft 1
+pop local 1
+push this 0
+call Bat.getRight 1
+pop local 2
+push this 1
+call Ball.getLeft 1
+pop local 3
+push this 1
+call Ball.getRight 1
+pop local 4
+push this 2
+push constant 4
+eq
+if-goto _YoonrrJ4zOYYhCgj
+goto _5ywLlgWc3f1hrrDr
+label _YoonrrJ4zOYYhCgj
+push local 1
+push local 4
+gt
+push local 2
+push local 3
+lt
+or
+pop this 3
+push this 3
+not
+if-goto _MHuJbdymraRffdTb
+goto _YOaobspn3xrq3NBe
+label _MHuJbdymraRffdTb
+push local 4
+push local 1
+push constant 10
+add
+lt
+if-goto _ACNN0aPlrqMZgFsA
+push local 3
+push local 2
+push constant 10
+sub
+gt
+if-goto _5XaxLRWxlmwNS2Em
+goto _AsB4OgnTAMtCDUCJ
+label _5XaxLRWxlmwNS2Em
+push constant 1
+pop local 0
+label _AsB4OgnTAMtCDUCJ
+goto _DOUUsNtO7H5xvihN
+label _ACNN0aPlrqMZgFsA
+push constant 1
+neg
+pop local 0
+label _DOUUsNtO7H5xvihN
+push this 6
+push constant 2
+sub
+pop this 6
+push this 0
+push this 6
+call Bat.setWidth 2
+pop temp 0
+push this 4
+push constant 1
+add
+pop this 4
+push constant 22
+push constant 7
+call Output.moveCursor 2
+pop temp 0
+push this 4
+call Output.printInt 1
+pop temp 0
+label _YOaobspn3xrq3NBe
+label _5ywLlgWc3f1hrrDr
+push this 1
+push local 0
+call Ball.bounce 2
+pop temp 0
+label _PwRf2Kqq2OZmbBWn
+push constant 0
+return
