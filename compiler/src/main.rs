@@ -1,9 +1,10 @@
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{Read, Write};
 use std::vec::Vec;
 use std::{path::PathBuf, str::FromStr};
 
 use anyhow::*;
+use assembler::assembler;
 use clap::Parser;
 use compiler::compiler;
 
@@ -99,33 +100,47 @@ fn compile_to_vm(contents: &[FileContent]) -> Result<Vec<FileContent>> {
     Ok(ret)
 }
 
-fn compile_to_binary(contents: &[FileContent]) -> Result<Vec<FileContent>> {
-    let mut ret = vec![];
+fn compile_to_binary(contents: &[FileContent]) -> Result<String> {
+    let mut hack_commands = vec![];
     for content in contents {
         let filename = content.filename()?;
-        let commands = compiler::compile_to_bin(&content.content, filename)?;
-        let output_content = commands
-            .iter()
-            .map(|c| format!("{:016b}", c))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let output_path = content.path.with_extension("bin");
-        ret.push(FileContent::new(output_path, output_content));
+        hack_commands.extend(compiler::compile_to_hack(&content.content, filename)?);
     }
 
-    Ok(ret)
+    let commands = assembler::code::assemble(&hack_commands)?;
+    let output_content = commands
+        .iter()
+        .map(|c| format!("{:016b}", c))
+        .collect::<Vec<_>>()
+        .join("\n");
+    Ok(output_content)
 }
 
 fn main() {
     let args = Args::parse();
     let input_file_contents = read_inputs(args.input).unwrap();
-    let output_contents = match args.output_format {
-        OutputFormat::VM => compile_to_vm(&input_file_contents).unwrap(),
-        OutputFormat::Binary => compile_to_binary(&input_file_contents).unwrap(),
+    match args.output_format {
+        OutputFormat::VM => {
+            let contents = compile_to_vm(&input_file_contents).expect("failed to compile to vm");
+            for content in contents.iter() {
+                let mut file = File::create(&content.path).unwrap();
+                file.write_all(content.content.as_bytes()).unwrap();
+            }
+        }
+        OutputFormat::Binary => {
+            let content =
+                compile_to_binary(&input_file_contents).expect("failed to compile to binary");
+            let output_dir_path = if args.input.is_dir() {
+                args.input.to_str().unwrap()
+            } else {
+                args.input
+                    .parent()
+                    .and_then(|path| path.to_str())
+                    .unwrap_or("./")
+            };
+            let output_path = format!("{}/{}", output_dir_path, "Main.bin");
+            let mut file = File::create(&output_path).unwrap();
+            file.write_all(content.as_bytes()).unwrap();
+        }
     };
-
-    for content in output_contents {
-        let mut file = File::create(&content.path).unwrap();
-        file.write_all(content.content.as_bytes()).unwrap();
-    }
 }

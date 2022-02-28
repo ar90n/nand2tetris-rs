@@ -21,8 +21,3 @@ pub fn compile_to_hack(program: &str, filename: String) -> Result<Vec<HackComman
     let vm_commands = compile_to_vm(program, filename.clone())?;
     translate(&vm_commands, Some(&filename))
 }
-
-pub fn compile_to_bin(program: &str, filename: String) -> Result<Vec<u16>> {
-    let hack_commands = compile_to_hack(program, filename)?;
-    assemble(&hack_commands)
-}
