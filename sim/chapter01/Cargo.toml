@@ -7,8 +7,7 @@ edition = "2021"
 
 
 [build-dependencies]
-#kaze = { git = "https://github.com/ar90n/kaze.git", branch = "verilog-generation-support" }
-kaze = { path = "../../kaze/kaze" }
+kaze = { git = "https://github.com/ar90n/kaze.git", branch = "verilog-generation-support" }
 rtl = { path = "../../rtl"}
 
 [dependencies]
