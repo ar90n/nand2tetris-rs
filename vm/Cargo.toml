@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.53"
 assembler = { path = "../assembler" }
-rand = "0.8.4"
+rand = "0.8.5"
