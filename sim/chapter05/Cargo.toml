@@ -11,5 +11,5 @@ rtl = { path = "../../rtl"}
 
 [dependencies]
 kaze = { path = "../../kaze/kaze" }
-rstest = "0.12.0"
+rstest = "0.18.2"
 behavior = { path = "../../behavior"}

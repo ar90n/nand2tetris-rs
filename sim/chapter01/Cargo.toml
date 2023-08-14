@@ -11,4 +11,4 @@ kaze = { git = "https://github.com/ar90n/kaze.git", branch = "verilog-generation
 rtl = { path = "../../rtl"}
 
 [dependencies]
-rstest = "0.12.0"
+rstest = "0.18.2"
