@@ -10,4 +10,4 @@ anyhow = "1.0.53"
 rand = "0.8.5"
 vm = { path = "../vm"}
 assembler = {path = "../assembler"}
-clap = { version = "3.1.2", features = ["derive"] }
+clap = { version = "4.5.3", features = ["derive"] }
